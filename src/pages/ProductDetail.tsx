@@ -10,6 +10,30 @@ const ProductDetail = () => {
   const { id } = useParams();
   const [selectedImage, setSelectedImage] = useState(0);
 
+  const handleCopyUrl = async() => {
+    const url = window.location.href;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: document.title,
+          text: 'Check this out!',
+          url,
+        });
+        // alert('Thanks for sharing!');
+      } catch (error) {
+        alert('Share cancelled or failed');
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(url);
+        alert('URL copied to clipboard!');
+      } catch {
+        alert('Failed to copy URL');
+      }
+    }
+  };
+
   // Mock product data (in real app, fetch based on id)
   const product = {
     id: 1,
@@ -143,15 +167,15 @@ const ProductDetail = () => {
 
           <div className="space-y-2">
             <div className="flex items-center space-x-4">
-              <span className="text-3xl font-bold text-primary">${product.price}</span>
+              <span className="text-3xl font-bold text-primary">₹{product.price.toLocaleString('en-IN')}</span>
               {product.originalPrice > product.price && (
                 <span className="text-xl text-muted-foreground line-through">
-                  ${product.originalPrice}
+                  ₹{product.originalPrice.toLocaleString('en-IN')}
                 </span>
               )}
               {product.originalPrice > product.price && (
                 <Badge variant="secondary">
-                  Save ${product.originalPrice - product.price}
+                  Save ₹{(product.originalPrice - product.price).toLocaleString('en-IN')}
                 </Badge>
               )}
             </div>
@@ -171,7 +195,7 @@ const ProductDetail = () => {
               <Button variant="outline" size="lg">
                 <Heart className="h-5 w-5" />
               </Button>
-              <Button variant="outline" size="lg">
+              <Button variant="outline" size="lg" onClick={handleCopyUrl}>
                 <Share2 className="h-5 w-5" />
               </Button>
             </div>
@@ -281,7 +305,7 @@ const ProductDetail = () => {
                 />
                 <h3 className="font-semibold mb-2">{relatedProduct.name}</h3>
                 <div className="flex items-center justify-between">
-                  <span className="text-lg font-bold text-primary">${relatedProduct.price}</span>
+                  <span className="text-lg font-bold text-primary">₹{relatedProduct.price.toLocaleString('en-IN')}</span>
                   <div className="flex items-center">
                     <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                     <span className="ml-1 text-sm">{relatedProduct.rating}</span>

@@ -7,37 +7,38 @@ import heroImage from "@/assets/hero-mobile-store.jpg";
 
 const Home = () => {
   const featuredProducts = [
-    {
-      id: 1,
-      name: "iPhone 15 Pro Max",
-      price: "$1,199",
-      originalPrice: "$1,299",
-      image: "/placeholder.svg",
-      rating: 4.9,
-      reviews: 1250,
-      badge: "Bestseller"
-    },
-    {
-      id: 2,
-      name: "Samsung Galaxy S24 Ultra",
-      price: "$1,099",
-      originalPrice: "$1,199",
-      image: "/placeholder.svg",
-      rating: 4.8,
-      reviews: 980,
-      badge: "Featured"
-    },
-    {
-      id: 3,
-      name: "Google Pixel 8 Pro",
-      price: "$899",
-      originalPrice: "$999",
-      image: "/placeholder.svg",
-      rating: 4.7,
-      reviews: 750,
-      badge: "Great Value"
-    }
-  ];
+  {
+    id: 1,
+    name: "iPhone 15 Pro Max",
+    price: "₹99,900",
+    originalPrice: "₹1,09,900",
+    image: "/placeholder.svg",
+    rating: 4.9,
+    reviews: 1250,
+    badge: "Bestseller"
+  },
+  {
+    id: 2,
+    name: "Samsung Galaxy S24 Ultra",
+    price: "₹94,900",
+    originalPrice: "₹1,04,900",
+    image: "/placeholder.svg",
+    rating: 4.8,
+    reviews: 980,
+    badge: "Featured"
+  },
+  {
+    id: 3,
+    name: "Google Pixel 8 Pro",
+    price: "₹78,900",
+    originalPrice: "₹89,900",
+    image: "/placeholder.svg",
+    rating: 4.7,
+    reviews: 750,
+    badge: "Great Value"
+  }
+];
+
 
   const features = [
     {

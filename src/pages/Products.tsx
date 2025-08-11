@@ -241,10 +241,10 @@ const Products = () => {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <div className="flex items-center space-x-2">
-                  <span className="text-2xl font-bold text-primary">${product.price}</span>
+                  <span className="text-2xl font-bold text-primary">₹{product.price.toLocaleString('en-IN')}</span>
                   {product.originalPrice > product.price && (
                     <span className="text-lg text-muted-foreground line-through">
-                      ${product.originalPrice}
+                      ₹{product.originalPrice.toLocaleString('en-IN')}
                     </span>
                   )}
                 </div>
