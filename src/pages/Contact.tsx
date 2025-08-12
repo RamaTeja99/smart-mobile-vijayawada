@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { MapPin, Phone, Mail, Share2, MessageSquare, Instagram, Youtube } from "lucide-react";
+import { MapPin, Phone, Mail, Share2, MessageSquare, Instagram, Youtube, Star, ExternalLink } from "lucide-react";
 const Contact = () => {
   const { toast } = useToast();
   const [formData, setFormData] = useState({
@@ -58,7 +58,7 @@ const Contact = () => {
     {
       icon: Mail,
       title: "Email",
-      details: "smartmobile@gmail.com",
+      details: "smartmobile007788@gmail.com",
       subDetails: "We respond within 24 hours"
     },
     {
@@ -242,7 +242,7 @@ const Contact = () => {
                   </a>
                 </Button>
                 <Button variant="outline" className="w-full justify-start" asChild>
-                  <a href="mailto:smartmobile@gmail.com">
+                  <a href="mailto:smartmobile007788@gmail.com">
                     <Mail className="h-4 w-4 mr-2" />
                     Email Us
                   </a>
@@ -300,6 +300,34 @@ const Contact = () => {
           </Card>
         </div>
       </div>
+
+      {/* Review Us Section */}
+      <Card>
+        <CardHeader className="text-center">
+          <CardTitle className="text-2xl">Love Our Service?</CardTitle>
+          <p className="text-muted-foreground">
+            Share your experience and help others discover our exceptional mobile solutions
+          </p>
+        </CardHeader>
+        <CardContent className="text-center">
+          <Button 
+            size="lg" 
+            asChild
+            className="bg-gradient-to-r from-primary to-primary-glow hover:opacity-90 transition-opacity"
+          >
+            <a 
+              href="https://g.page/r/CaDJduUN74MMEBM/review"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2"
+            >
+              <Star className="h-4 w-4" />
+              Write a Review on Google
+              <ExternalLink className="h-4 w-4" />
+            </a>
+          </Button>
+        </CardContent>
+      </Card>
 
       {/* Map Placeholder */}
       <Card>
