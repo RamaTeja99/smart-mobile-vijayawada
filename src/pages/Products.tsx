@@ -3,7 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue
+} from "@/components/ui/select";
 import { Link } from "react-router-dom";
 import { Search, Star, Filter, Loader2 } from "lucide-react";
 import { useProductSearch, useSearchFilters } from "./hooks";
@@ -19,9 +21,10 @@ const Products = () => {
   const [inStock, setInStock] = useState<boolean>(false);
   const [currentPage, setCurrentPage] = useState(1);
 
+  // Fetch brands, categories, price ranges
   const { filters, loading: filtersLoading } = useSearchFilters();
 
-  // Build API search parameters
+  // Build API params — only add keys if filters are active
   const searchParams: SearchParams = {
     ...(searchQuery && { query: searchQuery }),
     ...(selectedBrand !== "all" && { brand: selectedBrand }),
@@ -32,16 +35,18 @@ const Products = () => {
     sort_by: sortBy as any,
     sort_order: sortBy === "price" ? "asc" : "desc",
     limit: 12,
-    offset: (currentPage - 1) * 12,
+    offset: (currentPage - 1) * 12
   };
 
+  // Fetch products — when no search/filters, backend should return everything
   const { results: products, loading, error, metadata } = useProductSearch(searchParams);
 
-  // Reset pagination when filters change
+  // Reset page when any filter/search changes
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery, selectedBrand, selectedCategory, minPrice, maxPrice, sortBy, inStock]);
 
+  // Single product card
   const ProductCard = ({ product }: { product: Product }) => (
     <Card className="group hover:shadow-lg transition-shadow">
       <CardContent className="p-4">
@@ -83,6 +88,7 @@ const Products = () => {
             <span className="text-sm text-gray-500">{product.brand?.name}</span>
             <span className="text-sm text-gray-500">{product.category?.name}</span>
           </div>
+
           <h3 className="font-semibold text-lg line-clamp-2">{product.name}</h3>
 
           {product.short_description && (
@@ -100,9 +106,7 @@ const Products = () => {
 
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="text-xl font-bold text-green-600">
-                {product.price_display}
-              </span>
+              <span className="text-xl font-bold text-green-600">{product.price_display}</span>
               {product.original_price &&
                 product.original_price > product.price && (
                   <span className="text-sm text-gray-500 line-through">
@@ -139,10 +143,8 @@ const Products = () => {
   if (filtersLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="flex items-center gap-2">
-          <Loader2 className="h-6 w-6 animate-spin" />
-          <span>Loading filters...</span>
-        </div>
+        <Loader2 className="h-6 w-6 animate-spin mr-2" />
+        <span>Loading filters...</span>
       </div>
     );
   }
@@ -152,11 +154,9 @@ const Products = () => {
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Discover our complete range of premium mobile phones and accessories
-          </h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Our Products</h1>
           <p className="text-gray-600">
-            Find the perfect device for your needs with advanced search and filtering
+            Browse our catalog or use filters to find exactly what you need.
           </p>
         </div>
 
@@ -174,6 +174,8 @@ const Products = () => {
                   className="pl-10"
                 />
               </div>
+            </div>
+
             {/* Brand */}
             <div>
               <Select value={selectedBrand} onValueChange={setSelectedBrand}>
@@ -280,25 +282,23 @@ const Products = () => {
         <div className="flex justify-between items-center mb-6">
           <p className="text-gray-600">
             {loading
-              ? "Searching..."
+              ? "Loading..."
               : metadata
               ? `Showing ${products.length} of ${metadata.total} products`
-              : "No search performed"}
+              : "No products"}
           </p>
-          {metadata && metadata.duration && (
+          {metadata?.duration && (
             <p className="text-sm text-gray-500">
-              Search completed in {metadata.duration}ms
+              Loaded in {metadata.duration}ms
             </p>
           )}
         </div>
 
-        {/* Loading */}
+        {/* Loading Indicator */}
         {loading && (
           <div className="flex justify-center py-12">
-            <div className="flex items-center gap-2">
-              <Loader2 className="h-6 w-6 animate-spin" />
-              <span>Searching products...</span>
-            </div>
+            <Loader2 className="h-6 w-6 animate-spin mr-2" />
+            <span>Loading products...</span>
           </div>
         )}
 
@@ -310,7 +310,7 @@ const Products = () => {
           </div>
         )}
 
-        {/* Products */}
+        {/* Products List */}
         {!loading && !error && (
           <>
             {products.length > 0 ? (
@@ -328,7 +328,7 @@ const Products = () => {
                   No products found
                 </h3>
                 <p className="text-gray-600 mb-4">
-                  Try adjusting your search criteria or filters
+                  Try adjusting your search or filters
                 </p>
                 <Button
                   onClick={() => {
@@ -338,6 +338,7 @@ const Products = () => {
                     setMinPrice(0);
                     setMaxPrice(undefined);
                     setInStock(false);
+                    setCurrentPage(1);
                   }}
                 >
                   Clear Filters
