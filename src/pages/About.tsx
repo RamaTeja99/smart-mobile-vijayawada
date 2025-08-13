@@ -2,6 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Phone, Award, Users, Clock, Heart, Target } from "lucide-react";
+import aboutImage from "@/assets/about-hero-bg.jpg";
 
 const About = () => {
   const values = [
@@ -58,7 +59,7 @@ const About = () => {
   return (
     <div className="space-y-16">
       {/* Hero Section */}
-      <section className="bg-gradient-to-r from-primary to-primary-glow text-white py-16">
+      {/* <section className="bg-gradient-to-r from-primary to-primary-glow text-white py-16">
         <div className="container mx-auto px-4 text-center">
           <h1 className="text-4xl md:text-5xl font-bold mb-6">About SMART MOBILE</h1>
           <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto text-white/90">
@@ -69,8 +70,25 @@ const About = () => {
             <Link to="/contact">Get in Touch</Link>
           </Button>
         </div>
+      </section> */}
+      <section className="relative min-h-[80vh] flex items-center justify-center overflow-hidden">
+        <div 
+          className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: `url(${aboutImage})` }}
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/80 to-primary-glow/60" />
+        </div>
+        <div className="relative z-10 container mx-auto px-4 text-center text-white">
+          <h1 className="text-4xl md:text-5xl font-bold mb-6">About SMART MOBILE</h1>
+          <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto text-white/90">
+            Your trusted mobile technology partner since 2001. We're passionate about connecting 
+            people with the perfect mobile devices for their lifestyle.
+          </p>
+          <Button size="lg" variant="secondary" asChild>
+            <Link to="/contact">Get in Touch</Link>
+          </Button>
+        </div>
       </section>
-
       {/* Our Story */}
       <section className="container mx-auto px-4">
         <div className="max-w-4xl mx-auto text-center space-y-6">

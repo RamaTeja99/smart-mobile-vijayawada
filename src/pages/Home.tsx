@@ -9,7 +9,6 @@ import { Product } from "./api";
 
 const Home = () => {
   const { products: featuredProducts, loading: featuredLoading } = useFeaturedProducts(3);
-
   const features = [
     { icon: Smartphone, title: "Latest Models", description: "Access to the newest smartphones from all major brands" },
     { icon: Shield, title: "Warranty Protected", description: "All devices come with comprehensive warranty coverage" },

@@ -174,8 +174,6 @@ const Products = () => {
                   className="pl-10"
                 />
               </div>
-            </div>
-
             {/* Brand */}
             <div>
               <Select value={selectedBrand} onValueChange={setSelectedBrand}>
