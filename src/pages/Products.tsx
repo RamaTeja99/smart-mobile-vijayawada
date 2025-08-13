@@ -1,294 +1,377 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Link } from "react-router-dom";
-import { Search, Star, Filter } from "lucide-react";
+import { Search, Star, Filter, Loader2 } from "lucide-react";
+import { useProductSearch, useSearchFilters } from "./hooks";
+import { Product, SearchParams } from "./api";
 
 const Products = () => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedBrand, setSelectedBrand] = useState("all");
-  const [selectedCategory, setSelectedCategory] = useState("all");
-  const [sortBy, setSortBy] = useState("featured");
+  const [selectedBrand, setSelectedBrand] = useState<string>("all");
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [minPrice, setMinPrice] = useState<number>(0);
+  const [maxPrice, setMaxPrice] = useState<number | undefined>();
+  const [sortBy, setSortBy] = useState<string>("relevance");
+  const [inStock, setInStock] = useState<boolean>(false);
+  const [currentPage, setCurrentPage] = useState(1);
 
-  const products = [
-    {
-      id: 1,
-      name: "iPhone 15 Pro Max",
-      brand: "Apple",
-      category: "smartphone",
-      price: 1199,
-      originalPrice: 1299,
-      image: "/placeholder.svg",
-      rating: 4.9,
-      reviews: 1250,
-      badge: "Bestseller",
-      specs: ["256GB Storage", "Pro Camera System", "Titanium Design"]
-    },
-    {
-      id: 2,
-      name: "Samsung Galaxy S24 Ultra",
-      brand: "Samsung",
-      category: "smartphone",
-      price: 1099,
-      originalPrice: 1199,
-      image: "/placeholder.svg",
-      rating: 4.8,
-      reviews: 980,
-      badge: "Featured",
-      specs: ["512GB Storage", "S Pen Included", "AI Camera"]
-    },
-    {
-      id: 3,
-      name: "Google Pixel 8 Pro",
-      brand: "Google",
-      category: "smartphone",
-      price: 899,
-      originalPrice: 999,
-      image: "/placeholder.svg",
-      rating: 4.7,
-      reviews: 750,
-      badge: "Great Value",
-      specs: ["128GB Storage", "AI Photography", "Pure Android"]
-    },
-    {
-      id: 4,
-      name: "iPhone 15",
-      brand: "Apple",
-      category: "smartphone",
-      price: 799,
-      originalPrice: 899,
-      image: "/placeholder.svg",
-      rating: 4.6,
-      reviews: 890,
-      badge: "Popular",
-      specs: ["128GB Storage", "Dynamic Island", "USB-C"]
-    },
-    {
-      id: 5,
-      name: "Samsung Galaxy A54",
-      brand: "Samsung",
-      category: "smartphone",
-      price: 449,
-      originalPrice: 499,
-      image: "/placeholder.svg",
-      rating: 4.4,
-      reviews: 650,
-      badge: "Budget Pick",
-      specs: ["128GB Storage", "50MP Camera", "5000mAh Battery"]
-    },
-    {
-      id: 6,
-      name: "OnePlus 12",
-      brand: "OnePlus",
-      category: "smartphone",
-      price: 699,
-      originalPrice: 799,
-      image: "/placeholder.svg",
-      rating: 4.5,
-      reviews: 420,
-      badge: "Performance",
-      specs: ["256GB Storage", "Fast Charging", "Hasselblad Camera"]
+  const { filters, loading: filtersLoading } = useSearchFilters();
+
+  // Build API search parameters
+  const searchParams: SearchParams = {
+    ...(searchQuery && { query: searchQuery }),
+    ...(selectedBrand !== "all" && { brand: selectedBrand }),
+    ...(selectedCategory !== "all" && { category: selectedCategory }),
+    ...(minPrice > 0 && { min_price: minPrice }),
+    ...(maxPrice && { max_price: maxPrice }),
+    ...(inStock && { in_stock: inStock }),
+    sort_by: sortBy as any,
+    sort_order: sortBy === "price" ? "asc" : "desc",
+    limit: 12,
+    offset: (currentPage - 1) * 12,
+  };
+
+  const { results: products, loading, error, metadata } = useProductSearch(searchParams);
+
+  // Reset pagination when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, selectedBrand, selectedCategory, minPrice, maxPrice, sortBy, inStock]);
+
+  const ProductCard = ({ product }: { product: Product }) => (
+    <Card className="group hover:shadow-lg transition-shadow">
+      <CardContent className="p-4">
+        <div className="relative mb-4">
+          <img
+            src={product.featured_image || product.images[0] || "/placeholder.svg"}
+            alt={product.name}
+            className="w-full h-48 object-cover rounded-lg"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = "/placeholder.svg";
+            }}
+          />
+
+          {/* Badges */}
+          <div className="absolute top-2 right-2 flex flex-col gap-1">
+            {product.is_bestseller && (
+              <Badge className="bg-orange-500 text-white">Bestseller</Badge>
+            )}
+            {product.is_featured && (
+              <Badge className="bg-blue-500 text-white">Featured</Badge>
+            )}
+            {product.discount_percentage > 0 && (
+              <Badge className="bg-red-500 text-white">
+                -{product.discount_percentage}%
+              </Badge>
+            )}
+          </div>
+
+          {/* Stock */}
+          <div className="absolute bottom-2 left-2">
+            <Badge variant={product.in_stock ? "default" : "destructive"}>
+              {product.stock_status}
+            </Badge>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-gray-500">{product.brand?.name}</span>
+            <span className="text-sm text-gray-500">{product.category?.name}</span>
+          </div>
+          <h3 className="font-semibold text-lg line-clamp-2">{product.name}</h3>
+
+          {product.short_description && (
+            <p className="text-sm text-gray-600 line-clamp-2">
+              {product.short_description}
+            </p>
+          )}
+
+          <div className="flex items-center gap-1">
+            <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+            <span className="text-sm text-gray-600">
+              {product.average_rating.toFixed(1)} ({product.total_reviews} reviews)
+            </span>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-xl font-bold text-green-600">
+                {product.price_display}
+              </span>
+              {product.original_price &&
+                product.original_price > product.price && (
+                  <span className="text-sm text-gray-500 line-through">
+                    ${product.original_price.toFixed(2)}
+                  </span>
+                )}
+            </div>
+
+            {product.specifications &&
+              Object.keys(product.specifications).length > 0 && (
+                <div className="text-xs text-gray-500">
+                  {Object.values(product.specifications)[0]}
+                </div>
+              )}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
+  const handlePriceRangeChange = (range: string) => {
+    if (range === "all") {
+      setMinPrice(0);
+      setMaxPrice(undefined);
+    } else {
+      const priceRange = filters?.priceRanges.find((p) => p.label === range);
+      if (priceRange) {
+        setMinPrice(priceRange.min);
+        setMaxPrice(priceRange.max || undefined);
+      }
     }
-  ];
+  };
 
-  const brands = ["Apple", "Samsung", "Google", "OnePlus"];
-  const categories = ["smartphone", "accessory"];
-
-  const filteredProducts = products.filter(product => {
-    const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesBrand = selectedBrand === "all" || product.brand === selectedBrand;
-    const matchesCategory = selectedCategory === "all" || product.category === selectedCategory;
-    return matchesSearch && matchesBrand && matchesCategory;
-  });
-
-  const sortedProducts = [...filteredProducts].sort((a, b) => {
-    switch (sortBy) {
-      case "price-low":
-        return a.price - b.price;
-      case "price-high":
-        return b.price - a.price;
-      case "rating":
-        return b.rating - a.rating;
-      case "name":
-        return a.name.localeCompare(b.name);
-      default:
-        return 0;
-    }
-  });
+  if (filtersLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="flex items-center gap-2">
+          <Loader2 className="h-6 w-6 animate-spin" />
+          <span>Loading filters...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-8">
-      {/* Header */}
-      <div className="text-center space-y-4">
-        <h1 className="text-4xl font-bold">Our Products</h1>
-        <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-          Discover our complete range of premium mobile phones and accessories
-        </p>
-      </div>
-
-      {/* Filters */}
-      <div className="bg-muted/30 p-6 rounded-lg space-y-4">
-        <div className="flex items-center gap-2 mb-4">
-          <Filter className="h-5 w-5" />
-          <h2 className="text-lg font-semibold">Filter & Search</h2>
+    <div className="min-h-screen bg-gray-50">
+      <div className="container mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Discover our complete range of premium mobile phones and accessories
+          </h1>
+          <p className="text-gray-600">
+            Find the perfect device for your needs with advanced search and filtering
+          </p>
         </div>
-        
-        <div className="grid gap-4 md:grid-cols-5">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search products..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-          
-          <Select value={selectedBrand} onValueChange={setSelectedBrand}>
-            <SelectTrigger>
-              <SelectValue placeholder="All Brands" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Brands</SelectItem>
-              {brands.map(brand => (
-                <SelectItem key={brand} value={brand}>{brand}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          
-          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-            <SelectTrigger>
-              <SelectValue placeholder="All Categories" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Categories</SelectItem>
-              {categories.map(category => (
-                <SelectItem key={category} value={category}>
-                  {category.charAt(0).toUpperCase() + category.slice(1)}s
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          
-          <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger>
-              <SelectValue placeholder="Sort By" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="featured">Featured</SelectItem>
-              <SelectItem value="price-low">Price: Low to High</SelectItem>
-              <SelectItem value="price-high">Price: High to Low</SelectItem>
-              <SelectItem value="rating">Highest Rated</SelectItem>
-              <SelectItem value="name">Name A-Z</SelectItem>
-            </SelectContent>
-          </Select>
-          
-          <Button
-            variant="outline"
-            onClick={() => {
-              setSearchQuery("");
-              setSelectedBrand("all");
-              setSelectedCategory("all");
-              setSortBy("featured");
-            }}
-          >
-            Clear Filters
-          </Button>
-        </div>
-      </div>
 
-      {/* Results Count */}
-      <div className="flex items-center justify-between">
-        <p className="text-muted-foreground">
-          Showing {sortedProducts.length} of {products.length} products
-        </p>
-      </div>
-
-      {/* Products Grid */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {sortedProducts.map((product) => (
-          <Card key={product.id} className="group hover:shadow-elevated transition-all duration-300">
-            <CardHeader className="space-y-4">
+        {/* Filters */}
+        <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
+            {/* Search */}
+            <div className="lg:col-span-2">
               <div className="relative">
-                {product.badge && (
-                  <Badge className="absolute top-2 left-2 z-10">{product.badge}</Badge>
-                )}
-                <img
-                  src={product.image}
-                  alt={product.name}
-                  className="w-full h-48 object-cover rounded-lg bg-muted"
+                <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Input
+                  placeholder="Search products..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10"
                 />
               </div>
-              <div className="space-y-2">
-                <div className="text-sm text-muted-foreground">{product.brand}</div>
-                <CardTitle className="group-hover:text-primary transition-colors">
-                  {product.name}
-                </CardTitle>
-                <div className="flex items-center space-x-2">
-                  <div className="flex items-center">
-                    <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                    <span className="ml-1 text-sm font-medium">{product.rating}</span>
-                  </div>
-                  <span className="text-sm text-muted-foreground">
-                    ({product.reviews} reviews)
-                  </span>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <div className="flex items-center space-x-2">
-                  <span className="text-2xl font-bold text-primary">${product.price}</span>
-                  {product.originalPrice > product.price && (
-                    <span className="text-lg text-muted-foreground line-through">
-                      ${product.originalPrice}
-                    </span>
-                  )}
-                </div>
-                <ul className="text-sm text-muted-foreground space-y-1">
-                  {product.specs.map((spec, index) => (
-                    <li key={index}>• {spec}</li>
-                  ))}
-                </ul>
-              </div>
-              <div className="flex gap-2">
-                <Button className="flex-1" asChild>
-                  <Link to={`/products/${product.id}`}>
-                    View Details
-                  </Link>
-                </Button>
-                <Button variant="outline" asChild>
-                  <Link to="/contact">
-                    Enquire
-                  </Link>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+            </div>
 
-      {sortedProducts.length === 0 && (
-        <div className="text-center py-12">
-          <p className="text-muted-foreground text-lg">
-            No products found matching your criteria.
-          </p>
-          <Button
-            variant="outline"
-            className="mt-4"
-            onClick={() => {
-              setSearchQuery("");
-              setSelectedBrand("all");
-              setSelectedCategory("all");
-            }}
-          >
-            Clear Filters
-          </Button>
+            {/* Brand */}
+            <div>
+              <Select value={selectedBrand} onValueChange={setSelectedBrand}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All Brands" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Brands</SelectItem>
+                  {filters?.brands.map((brand) => (
+                    <SelectItem key={brand.id} value={brand.slug}>
+                      {brand.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Category */}
+            <div>
+              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All Categories" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  {filters?.categories.map((category) => (
+                    <SelectItem key={category.id} value={category.slug}>
+                      {category.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Price */}
+            <div>
+              <Select
+                value={`${minPrice}-${maxPrice || "max"}`}
+                onValueChange={handlePriceRangeChange}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Price Range" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Prices</SelectItem>
+                  {filters?.priceRanges.map((range) => (
+                    <SelectItem key={range.label} value={range.label}>
+                      {range.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Sort */}
+            <div>
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="relevance">Relevance</SelectItem>
+                  <SelectItem value="price">Price: Low to High</SelectItem>
+                  <SelectItem value="price-high">Price: High to Low</SelectItem>
+                  <SelectItem value="rating">Highest Rated</SelectItem>
+                  <SelectItem value="name">Name A-Z</SelectItem>
+                  <SelectItem value="date">Newest First</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Extra filters */}
+          <div className="flex flex-wrap gap-4 mt-4 pt-4 border-t">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={inStock}
+                onChange={(e) => setInStock(e.target.checked)}
+                className="rounded"
+              />
+              <span className="text-sm">In Stock Only</span>
+            </label>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setSearchQuery("");
+                setSelectedBrand("all");
+                setSelectedCategory("all");
+                setMinPrice(0);
+                setMaxPrice(undefined);
+                setSortBy("relevance");
+                setInStock(false);
+                setCurrentPage(1);
+              }}
+            >
+              Clear All Filters
+            </Button>
+          </div>
         </div>
-      )}
+
+        {/* Results Header */}
+        <div className="flex justify-between items-center mb-6">
+          <p className="text-gray-600">
+            {loading
+              ? "Searching..."
+              : metadata
+              ? `Showing ${products.length} of ${metadata.total} products`
+              : "No search performed"}
+          </p>
+          {metadata && metadata.duration && (
+            <p className="text-sm text-gray-500">
+              Search completed in {metadata.duration}ms
+            </p>
+          )}
+        </div>
+
+        {/* Loading */}
+        {loading && (
+          <div className="flex justify-center py-12">
+            <div className="flex items-center gap-2">
+              <Loader2 className="h-6 w-6 animate-spin" />
+              <span>Searching products...</span>
+            </div>
+          </div>
+        )}
+
+        {/* Error */}
+        {error && (
+          <div className="text-center py-12">
+            <p className="text-red-600 mb-4">{error}</p>
+            <Button onClick={() => window.location.reload()}>Try Again</Button>
+          </div>
+        )}
+
+        {/* Products */}
+        {!loading && !error && (
+          <>
+            {products.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {products.map((product) => (
+                  <Link key={product.id} to={`/products/${product.id}`}>
+                    <ProductCard product={product} />
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <Filter className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                  No products found
+                </h3>
+                <p className="text-gray-600 mb-4">
+                  Try adjusting your search criteria or filters
+                </p>
+                <Button
+                  onClick={() => {
+                    setSearchQuery("");
+                    setSelectedBrand("all");
+                    setSelectedCategory("all");
+                    setMinPrice(0);
+                    setMaxPrice(undefined);
+                    setInStock(false);
+                  }}
+                >
+                  Clear Filters
+                </Button>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Pagination */}
+        {metadata && metadata.total > 12 && (
+          <div className="flex justify-center items-center gap-2 mt-12">
+            <Button
+              variant="outline"
+              disabled={!metadata.hasPrev}
+              onClick={() => setCurrentPage((p) => p - 1)}
+            >
+              Previous
+            </Button>
+            <span className="px-4 py-2 text-sm text-gray-600">
+              Page {currentPage} of {Math.ceil(metadata.total / 12)}
+            </span>
+            <Button
+              variant="outline"
+              disabled={!metadata.hasNext}
+              onClick={() => setCurrentPage((p) => p + 1)}
+            >
+              Next
+            </Button>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

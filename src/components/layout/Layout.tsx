@@ -1,6 +1,7 @@
 import { ReactNode } from "react";
 import Header from "./Header";
 import Footer from "./Footer";
+import { AuthProvider } from "../../pages/AuthContext";
 
 interface LayoutProps {
   children: ReactNode;
@@ -8,6 +9,7 @@ interface LayoutProps {
 
 const Layout = ({ children }: LayoutProps) => {
   return (
+     <AuthProvider>
     <div className="min-h-screen flex flex-col">
       <Header />
       <main className="flex-1">
@@ -15,6 +17,7 @@ const Layout = ({ children }: LayoutProps) => {
       </main>
       <Footer />
     </div>
+    </AuthProvider>
   );
 };
 
