@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,13 +14,17 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import apiClient, { Product } from "@/pages/api";
+import apiClient, { Product, Brand, Category } from "@/pages/api";
 
 const CreateProduct = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
-  // Explicit state typing so TypeScript knows our narrow types
+  // New state for brands and categories
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+
+  // Form state
   const [formData, setFormData] = useState<{
     name: string;
     price: string;
@@ -37,7 +41,7 @@ const CreateProduct = () => {
     is_bestseller: boolean;
     is_new: boolean;
     images: string[];
-    specifications: string; // edited in textarea as JSON string
+    specifications: string;
   }>({
     name: "",
     price: "",
@@ -57,6 +61,28 @@ const CreateProduct = () => {
     specifications: "{}",
   });
 
+  // Fetch brands & categories on mount
+  useEffect(() => {
+    const fetchFilters = async () => {
+      try {
+        const [brandsRes, categoriesRes] = await Promise.all([
+          apiClient.getBrands(),
+          apiClient.getCategories(),
+        ]);
+        if (brandsRes.status === "success" && brandsRes.data) {
+          setBrands(brandsRes.data);
+        }
+        if (categoriesRes.status === "success" && categoriesRes.data) {
+          setCategories(categoriesRes.data);
+        }
+      } catch (e) {
+        toast.error("Failed to load brands or categories");
+      }
+    };
+    fetchFilters();
+  }, []);
+
+  // Change handler
   const handleChange = (name: string, value: any) => {
     setFormData((prev) => ({
       ...prev,
@@ -64,23 +90,41 @@ const CreateProduct = () => {
     }));
   };
 
+  // Add image link
+  const addImage = () => {
+    setFormData({ ...formData, images: [...formData.images, ""] });
+  };
+
+  // Change image link
+  const changeImageLink = (index: number, value: string) => {
+    const updated = [...formData.images];
+    updated[index] = value;
+    setFormData({ ...formData, images: updated });
+  };
+
+  // Remove image link
+  const removeImage = (index: number) => {
+    const updated = formData.images.filter((_, i) => i !== index);
+    setFormData({ ...formData, images: updated });
+  };
+
+  // Submit handler
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      let parsedSpecs: Record<string, any> | undefined;
+      let parsedSpecs: Record<string, any> = {};
       if (formData.specifications.trim()) {
         try {
           parsedSpecs = JSON.parse(formData.specifications);
         } catch {
-          toast.error("Invalid JSON in specifications field");
+          toast.error("Invalid JSON in specifications");
           setLoading(false);
           return;
         }
       }
 
-      // ✅ Send brand_id and category_id per backend spec instead of full Brand/Category objects
       const productData: Partial<Product> & {
         brand_id?: string;
         category_id?: string;
@@ -90,23 +134,33 @@ const CreateProduct = () => {
         original_price: formData.original_price
           ? parseFloat(formData.original_price)
           : undefined,
-        stock_quantity: parseInt(formData.stock_quantity) || 0,
+        stock_quantity: parseInt(formData.stock_quantity, 10) || 0,
         short_description: formData.short_description,
         description: formData.description,
         model: formData.model,
-        sku: formData.sku,
+        sku: formData.sku || undefined,
         brand_id: formData.brand_id || undefined,
         category_id: formData.category_id || undefined,
         status: formData.status,
         is_featured: formData.is_featured,
         is_bestseller: formData.is_bestseller,
         is_new: formData.is_new,
-        images: formData.images,
+        images: formData.images.filter((url) => url.trim() !== ""),
         specifications: parsedSpecs,
       };
 
-      const response = await apiClient.createProduct(productData);
+      if (!productData.name?.trim()) {
+        toast.error("Product name is required");
+        setLoading(false);
+        return;
+      }
+      if (typeof productData.price !== "number" || isNaN(productData.price)) {
+        toast.error("Valid price is required");
+        setLoading(false);
+        return;
+      }
 
+      const response = await apiClient.createProduct(productData);
       if (response.status === "success") {
         toast.success("Product created successfully!");
         navigate("/admin/dashboard");
@@ -115,7 +169,7 @@ const CreateProduct = () => {
       }
     } catch (error: any) {
       console.error("Create product error:", error);
-      toast.error(error.message || "Failed to create product");
+      toast.error(error?.message || "Failed to create product");
     } finally {
       setLoading(false);
     }
@@ -135,95 +189,73 @@ const CreateProduct = () => {
             </Button>
           </CardTitle>
         </CardHeader>
+
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Basic info */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Product Name */}
               <div className="space-y-2">
-                <Label htmlFor="name">Product Name *</Label>
+                <Label>Product Name *</Label>
                 <Input
-                  id="name"
                   value={formData.name}
                   onChange={(e) => handleChange("name", e.target.value)}
-                  placeholder="Enter product name"
-                  required
                 />
               </div>
 
-              {/* SKU */}
               <div className="space-y-2">
-                <Label htmlFor="sku">SKU</Label>
+                <Label>SKU</Label>
                 <Input
-                  id="sku"
                   value={formData.sku}
                   onChange={(e) => handleChange("sku", e.target.value)}
-                  placeholder="Enter product SKU"
                 />
               </div>
 
-              {/* Price */}
               <div className="space-y-2">
-                <Label htmlFor="price">Price *</Label>
+                <Label>Price *</Label>
                 <Input
-                  id="price"
                   type="number"
-                  step="0.01"
                   value={formData.price}
                   onChange={(e) => handleChange("price", e.target.value)}
-                  placeholder="0.00"
-                  required
                 />
               </div>
 
-              {/* Original Price */}
               <div className="space-y-2">
-                <Label htmlFor="original_price">Original Price</Label>
+                <Label>Original Price</Label>
                 <Input
-                  id="original_price"
                   type="number"
-                  step="0.01"
                   value={formData.original_price}
-                  onChange={(e) =>
-                    handleChange("original_price", e.target.value)
-                  }
-                  placeholder="0.00"
+                  onChange={(e) => handleChange("original_price", e.target.value)}
                 />
               </div>
 
-              {/* Stock Quantity */}
               <div className="space-y-2">
-                <Label htmlFor="stock_quantity">Stock Quantity</Label>
+                <Label>Stock Quantity</Label>
                 <Input
-                  id="stock_quantity"
                   type="number"
                   value={formData.stock_quantity}
                   onChange={(e) =>
                     handleChange("stock_quantity", e.target.value)
                   }
-                  placeholder="0"
                 />
               </div>
 
-              {/* Model */}
               <div className="space-y-2">
-                <Label htmlFor="model">Model</Label>
+                <Label>Model</Label>
                 <Input
-                  id="model"
                   value={formData.model}
                   onChange={(e) => handleChange("model", e.target.value)}
-                  placeholder="Enter product model"
                 />
               </div>
 
               {/* Status */}
               <div className="space-y-2">
-                <Label htmlFor="status">Status</Label>
+                <Label>Status</Label>
                 <Select
                   value={formData.status}
-                  onValueChange={(value) =>
+                  onValueChange={(v) =>
                     handleChange(
                       "status",
-                      value as "active" | "inactive" | "out_of_stock"
+                      v as "active" | "inactive" | "out_of_stock"
                     )
                   }
                 >
@@ -238,93 +270,125 @@ const CreateProduct = () => {
                 </Select>
               </div>
 
-              {/* Brand ID */}
+              {/* Brand */}
               <div className="space-y-2">
-                <Label htmlFor="brand_id">Brand ID</Label>
-                <Input
-                  id="brand_id"
+                <Label>Brand *</Label>
+                <Select
                   value={formData.brand_id}
-                  onChange={(e) => handleChange("brand_id", e.target.value)}
-                  placeholder="Enter brand UUID"
-                />
+                  onValueChange={(value) => handleChange("brand_id", value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a brand" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {brands.map((brand) => (
+                      <SelectItem key={brand.id} value={brand.id}>
+                        {brand.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
-              {/* Category ID */}
+              {/* Category */}
               <div className="space-y-2">
-                <Label htmlFor="category_id">Category ID</Label>
-                <Input
-                  id="category_id"
+                <Label>Category *</Label>
+                <Select
                   value={formData.category_id}
-                  onChange={(e) => handleChange("category_id", e.target.value)}
-                  placeholder="Enter category UUID"
-                />
+                  onValueChange={(value) => handleChange("category_id", value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((cat) => (
+                      <SelectItem key={cat.id} value={cat.id}>
+                        {cat.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
-            {/* Short Description */}
-            <div className="space-y-2">
-              <Label htmlFor="short_description">Short Description</Label>
+            {/* Short & Full Description */}
+            <div>
+              <Label>Short Description</Label>
               <Textarea
-                id="short_description"
                 value={formData.short_description}
                 onChange={(e) =>
                   handleChange("short_description", e.target.value)
                 }
-                placeholder="Brief product description"
-                rows={3}
               />
             </div>
 
-            {/* Description */}
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
+            <div>
+              <Label>Description</Label>
               <Textarea
-                id="description"
                 value={formData.description}
-                onChange={(e) =>
-                  handleChange("description", e.target.value)
-                }
-                placeholder="Detailed product description"
-                rows={5}
+                onChange={(e) => handleChange("description", e.target.value)}
               />
             </div>
 
             {/* Checkboxes */}
-            <div className="flex flex-wrap gap-6">
+            <div className="flex gap-4">
               {[
-                ["is_featured", "Featured Product"],
+                ["is_featured", "Featured"],
                 ["is_bestseller", "Bestseller"],
                 ["is_new", "New Product"],
               ].map(([key, label]) => (
                 <div key={key} className="flex items-center space-x-2">
                   <Checkbox
-                    id={key}
                     checked={formData[key as keyof typeof formData] as boolean}
                     onCheckedChange={(checked) =>
                       handleChange(key, checked as boolean)
                     }
                   />
-                  <Label htmlFor={key}>{label}</Label>
+                  <Label>{label}</Label>
                 </div>
               ))}
             </div>
 
+            {/* Images */}
+            <div>
+              <Label>Product Images (URLs)</Label>
+              {formData.images.map((url, index) => (
+                <div key={index} className="flex gap-2 mt-2">
+                  <Input
+                    value={url}
+                    onChange={(e) => changeImageLink(index, e.target.value)}
+                    placeholder="https://example.com/image.jpg"
+                  />
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    onClick={() => removeImage(index)}
+                  >
+                    Remove
+                  </Button>
+                </div>
+              ))}
+              <Button
+                type="button"
+                className="mt-2"
+                onClick={addImage}
+                variant="outline"
+              >
+                Add Image
+              </Button>
+            </div>
+
             {/* Specifications */}
-            <div className="space-y-2">
-              <Label htmlFor="specifications">Specifications (JSON)</Label>
+            <div>
+              <Label>Specifications (JSON)</Label>
               <Textarea
-                id="specifications"
                 value={formData.specifications}
-                onChange={(e) =>
-                  handleChange("specifications", e.target.value)
-                }
-                placeholder='{"display": "6.1 inches", "storage": "128GB"}'
-                rows={4}
+                onChange={(e) => handleChange("specifications", e.target.value)}
               />
             </div>
 
-            {/* Submit Button */}
-            <div className="flex justify-end space-x-4">
+            {/* Actions */}
+            <div className="flex justify-end gap-4">
               <Button
                 type="button"
                 variant="outline"
