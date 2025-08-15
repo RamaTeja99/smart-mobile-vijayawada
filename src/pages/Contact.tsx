@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -6,7 +7,27 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { MapPin, Phone, Mail, Share2, MessageSquare, Instagram, Youtube, Star, ExternalLink } from "lucide-react";
+
 const Contact = () => {
+  const widgetContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+  const existingScript = document.querySelector('script[src="https://elfsightcdn.com/platform.js"]');
+
+  if (!existingScript) {
+    const script = document.createElement("script");
+    script.src = "https://elfsightcdn.com/platform.js";
+    script.async = true;
+    script.defer = true;
+    document.body.appendChild(script);
+
+    return () => {
+      document.body.removeChild(script);
+    };
+  }
+}, []);
+
+
   const { toast } = useToast();
   const [formData, setFormData] = useState({
     name: "",
@@ -303,31 +324,37 @@ const Contact = () => {
 
       {/* Review Us Section */}
       <Card>
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl">Love Our Service?</CardTitle>
-          <p className="text-muted-foreground">
-            Share your experience and help others discover our exceptional mobile solutions
-          </p>
-        </CardHeader>
-        <CardContent className="text-center">
-          <Button 
-            size="lg" 
-            asChild
-            className="bg-gradient-to-r from-primary to-primary-glow hover:opacity-90 transition-opacity"
+      <CardHeader className="text-center">
+        <CardTitle className="text-2xl">Love Our Service?</CardTitle>
+        <p className="text-muted-foreground">
+          Share your experience and help others discover our exceptional mobile solutions
+        </p>
+      </CardHeader>
+
+      <div className="my-8">
+        {/* Elfsight Google Reviews Widget */}
+        <div className="elfsight-app-ea4994cd-7618-4f59-a295-a727d5de11fb" data-elfsight-app-lazy></div>
+      </div>
+      
+      <CardContent className="text-center">
+        <Button
+          size="lg"
+          asChild
+          className="bg-gradient-to-r from-primary to-primary-glow hover:opacity-90 transition-opacity"
+        >
+          <a
+            href="https://g.page/r/CaDJduUN74MMEBM/review"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2"
           >
-            <a 
-              href="https://g.page/r/CaDJduUN74MMEBM/review"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2"
-            >
-              <Star className="h-4 w-4" />
-              Write a Review on Google
-              <ExternalLink className="h-4 w-4" />
-            </a>
-          </Button>
-        </CardContent>
-      </Card>
+            <Star className="h-4 w-4" />
+            Write a Review on Google
+            <ExternalLink className="h-4 w-4" />
+          </a>
+        </Button>
+      </CardContent>
+    </Card>
 
       {/* Map Placeholder */}
       <Card>
