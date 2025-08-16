@@ -1,3 +1,0 @@
-User-agent: *
-Allow: /
-Sitemap: https://smartmobilevijayawada.netlify.app/sitemap.xml
