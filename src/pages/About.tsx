@@ -171,7 +171,7 @@ const About = () => {
               <div className="text-white/80">Satisfaction Rate</div>
             </div>
             <div className="space-y-2">
-              <div className="text-4xl font-bold">9</div>
+              <div className="text-4xl font-bold">24+</div>
               <div className="text-white/80">Years Experience</div>
             </div>
           </div>
