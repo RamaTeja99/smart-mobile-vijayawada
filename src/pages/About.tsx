@@ -29,32 +29,23 @@ const About = () => {
   ];
 
   const milestones = [
-    {
-      year: "2015",
-      title: "Founded",
-      description: "Started as a small family business with a passion for mobile technology"
-    },
-    {
-      year: "2017",
-      title: "First Expansion",
-      description: "Opened our second location and expanded our product range"
-    },
-    {
-      year: "2019",
-      title: "Online Presence",
-      description: "Launched our e-commerce platform to serve customers nationwide"
-    },
-    {
-      year: "2021",
-      title: "Premium Partner",
-      description: "Became authorized dealers for all major smartphone brands"
-    },
-    {
-      year: "2024",
-      title: "Excellence Award",
-      description: "Recognized as 'Best Mobile Retailer' by industry association"
-    }
-  ];
+  {
+    year: "2001",
+    title: "Started SAI GANESH CELL SHOPPEE",
+    description: "Founded on August 15th, 2001, marking the beginning of our journey in mobile retail."
+  },
+  {
+    year: "2021",
+    title: "Opened Second Store - SMART MOBILE",
+    description: "Launched our second store, SMART MOBILE, on October 16th, 2021, expanding our reach and service."
+  },
+  {
+    year: "2025",
+    title: "Web Application Launch",
+    description: "Published our first web application on August 17th, 2025, entering the digital space."
+  }
+];
+
 
   return (
     <div className="space-y-16">
@@ -180,7 +171,7 @@ const About = () => {
               <div className="text-white/80">Satisfaction Rate</div>
             </div>
             <div className="space-y-2">
-              <div className="text-4xl font-bold">9</div>
+              <div className="text-4xl font-bold">24+</div>
               <div className="text-white/80">Years Experience</div>
             </div>
           </div>

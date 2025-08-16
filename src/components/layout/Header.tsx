@@ -185,7 +185,7 @@ const Header = () => {
           {/* Desktop contact + auth */}
           <nav className="flex items-center space-x-4">
             <Button variant="ghost" size="sm" className="hidden md:flex">
-              <Mail className="h-4 w-4 mr-2" /> smartmobile@gmail.com
+              <Mail className="h-4 w-4 mr-2" /> smartmobile007788@gmail.com
             </Button>
             <Button variant="ghost" size="sm" className="hidden md:flex">
               <Phone className="h-4 w-4 mr-2" /> +91 9985 007 788
