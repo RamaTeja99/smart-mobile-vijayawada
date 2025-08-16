@@ -52,6 +52,38 @@ export const useProducts = (params: {
 
   return { products, loading, error, pagination };
 };
+// Get all products (no filter, no search)
+export const useAllProducts = (limit = 1000) => {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchAllProducts = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await apiClient.getAllProducts(limit);
+
+        if (response.status === 'success' && response.data) {
+          setProducts(response.data);
+        } else {
+          setError(response.message || 'Failed to load products');
+        }
+      } catch (err) {
+        setError('Failed to load products');
+        console.error('All products fetch error:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAllProducts();
+  }, [limit]);
+
+  return { products, loading, error };
+};
+
 
 // Product search hook
 export const useProductSearch = (searchParams: SearchParams) => {
