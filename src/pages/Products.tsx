@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/select";
 import { Link } from "react-router-dom";
 import { Search, Star, Filter, Loader2 } from "lucide-react";
-import { useProductSearch, useSearchFilters } from "./hooks";
+import { useAllProducts, useProductSearch, useSearchFilters } from "./hooks";
 import { Product, SearchParams } from "./api";
 
 const Products = () => {
@@ -37,9 +37,24 @@ const Products = () => {
     limit: 12,
     offset: (currentPage - 1) * 12
   };
+// Always call both hooks
+const { products: allProducts, loading: allLoading, error: allError } = useAllProducts();
+const { results, loading: searchLoading, error: searchError, metadata: searchMeta } = useProductSearch(searchParams);
 
-  // Fetch products — when no search/filters, backend should return everything
-  const { results: products, loading, error, metadata } = useProductSearch(searchParams);
+const isAll =
+  !searchQuery &&
+  selectedBrand === "all" &&
+  selectedCategory === "all" &&
+  minPrice === 0 &&
+  !maxPrice &&
+  !inStock;
+
+const products = isAll ? allProducts : results;
+const loading = isAll ? allLoading : searchLoading;
+const error = isAll ? allError : searchError;
+const metadata = isAll ? { total: allProducts.length, hasNext: false, hasPrev: false } : searchMeta;
+
+
 
   // Reset page when any filter/search changes
   useEffect(() => {

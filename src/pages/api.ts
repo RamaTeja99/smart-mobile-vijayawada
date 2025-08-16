@@ -277,6 +277,11 @@ class ApiClient {
 
     return this.request<Product[]>(`/products?${queryString}`);
   }
+  // Product methods
+  async getAllProducts(limit = 1000): Promise<ApiResponse<Product[]>> {
+     return this.request<Product[]>(`/products/all?limit=${limit}`);
+  }
+
 
   async searchProducts(params: SearchParams): Promise<ApiResponse<Product[]>> {
     const queryString = new URLSearchParams(
