@@ -15,7 +15,9 @@ import {
   Trash2,
   Eye,
   Loader2,
-  AlertCircle
+  AlertCircle,
+  Settings,
+  BarChart3
 } from "lucide-react";
 import { useAuth } from "./AuthContext";
 import { useProducts } from "./hooks";
@@ -87,39 +89,45 @@ const AdminDashboard = () => {
     value, 
     icon: Icon, 
     description, 
-    color = "blue" 
+    color = "blue",
+    linkTo 
   }: {
     title: string;
     value: string | number;
     icon: any;
     description?: string;
     color?: string;
-  }) => (
-    <Card>
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium text-gray-600">{title}</p>
-            <div className="flex items-center gap-2">
-              <p className="text-2xl font-bold">{value}</p>
+    linkTo?: string;
+  }) => {
+    const CardContents = (
+      <Card className="cursor-pointer hover:shadow-md transition-shadow">
+        <CardContent className="p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">{title}</p>
+              <div className="flex items-center gap-2">
+                <p className="text-2xl font-bold">{value}</p>
+              </div>
+              {description && (
+                <p className="text-xs text-gray-500 mt-1">{description}</p>
+              )}
             </div>
-            {description && (
-              <p className="text-xs text-gray-500 mt-1">{description}</p>
-            )}
+            <div className={`p-3 bg-${color}-100 rounded-lg`}>
+              <Icon className={`h-6 w-6 text-${color}-600`} />
+            </div>
           </div>
-          <div className={`p-3 bg-${color}-100 rounded-lg`}>
-            <Icon className={`h-6 w-6 text-${color}-600`} />
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
+        </CardContent>
+      </Card>
+    );
+
+    return linkTo ? <Link to={linkTo}>{CardContents}</Link> : CardContents;
+  };
 
   const ProductRow = ({ product }: { product: Product }) => (
     <div className="flex items-center justify-between p-4 border-b last:border-b-0">
       <div className="flex items-center gap-4">
         <img
-          src={product.featured_image || product.images[0] || "/placeholder.svg"}
+          src={product.featured_image || product.images?.[0] || "/placeholder.svg"}
           alt={product.name}
           className="w-12 h-12 object-cover rounded-lg"
           onError={(e) => {
@@ -134,7 +142,7 @@ const AdminDashboard = () => {
 
       <div className="flex items-center gap-4">
         <div className="text-right">
-          <p className="font-medium">{product.price_display}</p>
+          <p className="font-medium">{product.price_display || `$${product.price}`}</p>
           <p className="text-sm text-gray-500">Stock: {product.stock_quantity}</p>
         </div>
 
@@ -143,15 +151,16 @@ const AdminDashboard = () => {
         </Badge>
 
         <div className="flex gap-1">
-          <Button size="sm" variant="ghost">
-            <Eye className="h-4 w-4" />
-          </Button>
-          <Button size="sm" variant="ghost">
-            <Edit className="h-4 w-4" />
-          </Button>
-          <Button size="sm" variant="ghost">
-            <Trash2 className="h-4 w-4" />
-          </Button>
+          <Link to={`/products/${product.id}`}>
+            <Button size="sm" variant="ghost">
+              <Eye className="h-4 w-4" />
+            </Button>
+          </Link>
+          <Link to={`/admin/products/${product.id}/edit`}>
+            <Button size="sm" variant="ghost">
+              <Edit className="h-4 w-4" />
+            </Button>
+          </Link>
         </div>
       </div>
     </div>
@@ -199,6 +208,7 @@ const AdminDashboard = () => {
               icon={Package}
               description="Active products in catalog"
               color="blue"
+              linkTo="/admin/products"
             />
             <StatCard
               title="Categories"
@@ -206,6 +216,7 @@ const AdminDashboard = () => {
               icon={ShoppingCart}
               description="Product categories"
               color="green"
+              linkTo="/admin/categories"
             />
             <StatCard
               title="Brands"
@@ -213,6 +224,7 @@ const AdminDashboard = () => {
               icon={Users}
               description="Available brands"
               color="purple"
+              linkTo="/admin/brands"
             />
             <StatCard
               title="Cache Entries"
@@ -223,6 +235,39 @@ const AdminDashboard = () => {
             />
           </div>
         )}
+
+        {/* Quick Actions */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <Link to="/admin/products/new">
+            <Card className="cursor-pointer hover:shadow-md transition-shadow">
+              <CardContent className="p-6 text-center">
+                <Plus className="h-8 w-8 mx-auto mb-2 text-blue-600" />
+                <h3 className="font-semibold">Add New Product</h3>
+                <p className="text-sm text-gray-600 mt-1">Create a new product in your catalog</p>
+              </CardContent>
+            </Card>
+          </Link>
+          
+          <Link to="/admin/products">
+            <Card className="cursor-pointer hover:shadow-md transition-shadow">
+              <CardContent className="p-6 text-center">
+                <Package className="h-8 w-8 mx-auto mb-2 text-green-600" />
+                <h3 className="font-semibold">Manage Products</h3>
+                <p className="text-sm text-gray-600 mt-1">View and edit your products</p>
+              </CardContent>
+            </Card>
+          </Link>
+          
+          <Link to="/admin/brands">
+            <Card className="cursor-pointer hover:shadow-md transition-shadow">
+              <CardContent className="p-6 text-center">
+                <Users className="h-8 w-8 mx-auto mb-2 text-purple-600" />
+                <h3 className="font-semibold">Manage Brands</h3>
+                <p className="text-sm text-gray-600 mt-1">Add and edit brands</p>
+              </CardContent>
+            </Card>
+          </Link>
+        </div>
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="overview" className="space-y-6">
@@ -241,9 +286,8 @@ const AdminDashboard = () => {
                 <CardHeader className="flex flex-row items-center justify-between">
                   <CardTitle>Recent Products</CardTitle>
                   <Link to="/admin/products">
-                    <Button size="sm">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add Product
+                    <Button size="sm" variant="outline">
+                      View All
                     </Button>
                   </Link>
                 </CardHeader>
@@ -296,48 +340,92 @@ const AdminDashboard = () => {
 
           {/* Products Tab */}
           <TabsContent value="products">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>Product Management</CardTitle>
-                <div className="flex gap-2">
-                  <Link to="/admin/products/new">
-                    <Button>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add Product
-                    </Button>
-                  </Link>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-12">
-                  <Package className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                    Product Management
-                  </h3>
-                  <p className="text-gray-600 mb-6">
-                    Create, edit, and manage your product catalog
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* Products Management */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Package className="h-5 w-5" />
+                    Products
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-gray-600 mb-4">
+                    Manage your product catalog, add new products, and update existing ones.
                   </p>
-                  <div className="flex gap-4 justify-center">
-                    <Link to="/admin/products">
-                      <Button>View All Products</Button>
+                  <div className="space-y-2">
+                    <Link to="/admin/products" className="block">
+                      <Button className="w-full justify-start">
+                        <Package className="h-4 w-4 mr-2" />
+                        View All Products
+                      </Button>
                     </Link>
-                    <Link to="/admin/categories">
-                      <Button variant="outline">Manage Categories</Button>
-                    </Link>
-                    <Link to="/admin/brands">
-                      <Button variant="outline">Manage Brands</Button>
+                    <Link to="/admin/products/new" className="block">
+                      <Button variant="outline" className="w-full justify-start">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add New Product
+                      </Button>
                     </Link>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+
+              {/* Categories Management */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <ShoppingCart className="h-5 w-5" />
+                    Categories
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-gray-600 mb-4">
+                    Organize your products with categories and manage category information.
+                  </p>
+                  <div className="space-y-2">
+                    <Link to="/admin/categories" className="block">
+                      <Button className="w-full justify-start">
+                        <ShoppingCart className="h-4 w-4 mr-2" />
+                        Manage Categories
+                      </Button>
+                    </Link>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Brands Management */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="h-5 w-5" />
+                    Brands
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-gray-600 mb-4">
+                    Manage product brands, add new brands, and update brand information.
+                  </p>
+                  <div className="space-y-2">
+                    <Link to="/admin/brands" className="block">
+                      <Button className="w-full justify-start">
+                        <Users className="h-4 w-4 mr-2" />
+                        Manage Brands
+                      </Button>
+                    </Link>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
 
           {/* Analytics Tab */}
           <TabsContent value="analytics">
             <Card>
               <CardHeader>
-                <CardTitle>Analytics & Performance</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5" />
+                  Analytics & Performance
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -389,10 +477,14 @@ const AdminDashboard = () => {
           <TabsContent value="settings">
             <Card>
               <CardHeader>
-                <CardTitle>System Settings</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <Settings className="h-5 w-5" />
+                  System Settings
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-center py-12">
+                  <Settings className="h-16 w-16 text-gray-300 mx-auto mb-4" />
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">
                     Settings & Configuration
                   </h3>

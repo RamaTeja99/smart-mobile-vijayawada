@@ -41,7 +41,7 @@ const CreateProduct = () => {
     is_bestseller: boolean;
     is_new: boolean;
     images: string[];
-    specifications: string;
+    specifications: { key: string; value: string }[];
   }>({
     name: "",
     price: "",
@@ -58,7 +58,11 @@ const CreateProduct = () => {
     is_bestseller: false,
     is_new: false,
     images: [],
-    specifications: "{}",
+    specifications: [
+    { key: "", value: "" },
+    { key: "", value: "" },
+    { key: "", value: "" },
+  ],
   });
 
   // Fetch brands & categories on mount
@@ -89,6 +93,24 @@ const CreateProduct = () => {
       [name]: value,
     }));
   };
+  const handleSpecChange = (index: number, field: "key" | "value", value: string) => {
+  const specs = [...formData.specifications];
+  specs[index][field] = value;
+  setFormData({ ...formData, specifications: specs });
+};
+
+const addSpecification = () => {
+  setFormData({
+    ...formData,
+    specifications: [...formData.specifications, { key: "", value: "" }],
+  });
+};
+
+const removeSpecification = (index: number) => {
+  const specs = formData.specifications.filter((_, i) => i !== index);
+  setFormData({ ...formData, specifications: specs });
+};
+
 
   // Add image link
   const addImage = () => {
@@ -114,16 +136,13 @@ const CreateProduct = () => {
     setLoading(true);
 
     try {
-      let parsedSpecs: Record<string, any> = {};
-      if (formData.specifications.trim()) {
-        try {
-          parsedSpecs = JSON.parse(formData.specifications);
-        } catch {
-          toast.error("Invalid JSON in specifications");
-          setLoading(false);
-          return;
+     let specsObj: Record<string, string> = {};
+
+     formData.specifications.forEach(({ key, value }) => {
+        if (key.trim()) {
+          specsObj[key.trim()] = value.trim();
         }
-      }
+      });
 
       const productData: Partial<Product> & {
         brand_id?: string;
@@ -146,7 +165,7 @@ const CreateProduct = () => {
         is_bestseller: formData.is_bestseller,
         is_new: formData.is_new,
         images: formData.images.filter((url) => url.trim() !== ""),
-        specifications: parsedSpecs,
+        specifications: specsObj,
       };
 
       if (!productData.name?.trim()) {
@@ -380,12 +399,37 @@ const CreateProduct = () => {
 
             {/* Specifications */}
             <div>
-              <Label>Specifications (JSON)</Label>
-              <Textarea
-                value={formData.specifications}
-                onChange={(e) => handleChange("specifications", e.target.value)}
-              />
-            </div>
+  <Label>Specifications</Label>
+  {formData.specifications.map((spec, index) => (
+    <div key={index} className="flex gap-2 mb-2">
+      <Input
+        placeholder="Key"
+        value={spec.key}
+        onChange={(e) => handleSpecChange(index, "key", e.target.value)}
+        className="flex-1"
+      />
+      <Input
+        placeholder="Value"
+        value={spec.value}
+        onChange={(e) => handleSpecChange(index, "value", e.target.value)}
+        className="flex-1"
+      />
+      {formData.specifications.length > 3 && (
+        <Button
+          variant="destructive"
+          type="button"
+          onClick={() => removeSpecification(index)}
+        >
+          Remove
+        </Button>
+      )}
+    </div>
+  ))}
+  <Button type="button" variant="outline" onClick={addSpecification}>
+    Add Specification
+  </Button>
+</div>
+
 
             {/* Actions */}
             <div className="flex justify-end gap-4">
