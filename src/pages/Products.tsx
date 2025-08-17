@@ -121,11 +121,11 @@ const metadata = isAll ? { total: allProducts.length, hasNext: false, hasPrev: f
 
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="text-xl font-bold text-green-600">{product.price_display}</span>
+              <span className="text-xl font-bold text-green-600"> ₹ {product.price_display.slice(1)}</span>
               {product.original_price &&
                 product.original_price > product.price && (
                   <span className="text-sm text-gray-500 line-through">
-                    ${product.original_price.toFixed(2)}
+                    ₹ {product.original_price.toFixed(2)}
                   </span>
                 )}
             </div>

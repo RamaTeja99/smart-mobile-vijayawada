@@ -185,10 +185,14 @@ const Header = () => {
           {/* Desktop contact + auth */}
           <nav className="flex items-center space-x-4">
             <Button variant="ghost" size="sm" className="hidden md:flex">
+               <a href="mailto:smartmobile007788@gmail.com" className="flex items-center space-x-2">
               <Mail className="h-4 w-4 mr-2" /> smartmobile007788@gmail.com
+              </a>
             </Button>
             <Button variant="ghost" size="sm" className="hidden md:flex">
+               <a href="tel:+919985007788" className="flex items-center space-x-2">
               <Phone className="h-4 w-4 mr-2" /> +91 9985 007 788
+              </a>
             </Button>
 
             {/* Auth dropdown for desktop */}

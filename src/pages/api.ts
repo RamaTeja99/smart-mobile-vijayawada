@@ -360,6 +360,26 @@ class ApiClient {
     return this.request<Category>(`/categories/${id}`);
   }
 
+  async createCategory(categoryData: Partial<Category>): Promise<ApiResponse<Category>> {
+  return this.request('/categories', {
+    method: 'POST',
+    body: JSON.stringify(categoryData),
+  });
+}
+
+  async updateCategory(id: string, categoryData: Partial<Category>): Promise<ApiResponse<Category>> {
+  return this.request(`/categories/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(categoryData),
+  });
+}
+
+  async deleteCategory(id: string): Promise<ApiResponse<any>> {
+  return this.request(`/categories/${id}`, {
+    method: 'DELETE',
+  });
+}
+
   // Brand methods
   async getBrands(): Promise<ApiResponse<Brand[]>> {
     return this.request<Brand[]>('/brands');
@@ -368,6 +388,26 @@ class ApiClient {
   async getBrandById(id: string): Promise<ApiResponse<Brand>> {
     return this.request<Brand>(`/brands/${id}`);
   }
+
+  async createBrand(brandData: Partial<Brand>): Promise<ApiResponse<Brand>> {
+  return this.request('/brands', {
+    method: 'POST',
+    body: JSON.stringify(brandData),
+  });
+}
+
+  async updateBrand(id: string, brandData: Partial<Brand>): Promise<ApiResponse<Brand>> {
+  return this.request(`/brands/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(brandData),
+  });
+}
+
+  async deleteBrand(id: string): Promise<ApiResponse<any>> {
+  return this.request(`/brands/${id}`, {
+    method: 'DELETE',
+  });
+}
 
   // Admin methods (require authentication)
   async createProduct(productData: Partial<Product>): Promise<ApiResponse<Product>> {
