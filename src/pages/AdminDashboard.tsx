@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React,{ useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -44,6 +44,9 @@ const AdminDashboard = () => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
   const [statsError, setStatsError] = useState<string | null>(null);
+  const [feedbacks, setFeedbacks] = useState([]);
+  const [loading, setLoading] = useState(true);
+
 
   const { products, loading: productsLoading } = useProducts({ limit: 10 });
 
@@ -67,7 +70,11 @@ const AdminDashboard = () => {
         setStatsLoading(false);
       }
     };
-
+    apiClient.getFeedbackList()
+      .then(res => {
+        if (res.status === 'success') setFeedbacks(res.data);
+      })
+      .finally(() => setLoading(false));
     fetchStats();
   }, []);
 
@@ -142,7 +149,7 @@ const AdminDashboard = () => {
 
       <div className="flex items-center gap-4">
         <div className="text-right">
-          <p className="font-medium">{product.price_display || `$${product.price}`}</p>
+          <p className="font-medium">₹{product.price_display.slice(1) || `$${product.price}`}</p>
           <p className="text-sm text-gray-500">Stock: {product.stock_quantity}</p>
         </div>
 
@@ -165,7 +172,39 @@ const AdminDashboard = () => {
       </div>
     </div>
   );
+  const convertToCSV = (data: any[]) => {
+    if (!data.length) return "";
+    const headers = ["Name", "Email", "Subject", "Message", "Date"];
+    const rows = data.map((fb) => [
+      fb.name,
+      fb.email,
+      fb.subject,
+      fb.message.replace(/\n/g, " "), // remove newlines
+      new Date(fb.created_at).toLocaleString(),
+    ]);
+    return [
+      headers.join(","),
+      ...rows.map((r) =>
+        r
+          .map((item) => `"${String(item).replace(/"/g, '""')}"`) // escape quotes
+          .join(",")
+      ),
+    ].join("\n");
+  };
 
+  const downloadCSV = () => {
+    if (!feedbacks.length) return;
+    const csv = convertToCSV(feedbacks);
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `feedbacks_${new Date().toISOString()}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
   if (statsLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -176,6 +215,7 @@ const AdminDashboard = () => {
       </div>
     );
   }
+  if (loading) return <div>Loading...</div>;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -271,11 +311,12 @@ const AdminDashboard = () => {
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="products">Products</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
             <TabsTrigger value="settings">Settings</TabsTrigger>
+            <TabsTrigger value="feedback">FeedBack</TabsTrigger>
           </TabsList>
 
           {/* Overview Tab */}
@@ -501,6 +542,108 @@ const AdminDashboard = () => {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+           {/* Feedback Tab */}
+          <TabsContent value="feedback" className="space-y-4">
+            <div className="flex justify-between items-center">
+              <h2 className="text-xl font-bold">Feedback Submissions</h2>
+              {feedbacks.length > 0 && (
+                <Button
+                  onClick={() => {
+                    if (!feedbacks.length) return;
+                    // CSV generator + download
+                    const headers = [
+                      "Name",
+                      "Email",
+                      "Subject",
+                      "Message",
+                      "Date",
+                    ];
+                    const rows = feedbacks.map((fb) => [
+                      fb.name,
+                      fb.email,
+                      fb.subject,
+                      fb.message.replace(/\n/g, " "),
+                      new Date(fb.created_at).toLocaleString(),
+                    ]);
+                    const csvContent =
+                      [
+                        headers.join(","),
+                        ...rows.map((r) =>
+                          r
+                            .map((item) =>
+                              `"${String(item).replace(/"/g, '""')}"`
+                            )
+                            .join(",")
+                        ),
+                      ].join("\n");
+
+                    const blob = new Blob([csvContent], {
+                      type: "text/csv;charset=utf-8;",
+                    });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = `feedbacks_${new Date()
+                      .toISOString()
+                      .replace(/[:\-]/g, "")}.csv`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                  }}
+                  className="bg-blue-600 text-white hover:bg-blue-700"
+                >
+                  Download CSV
+                </Button>
+              )}
+            </div>
+
+            <div className="overflow-x-auto border rounded-lg bg-white shadow-sm">
+              {feedbacks.length ? (
+                <table className="w-full table-auto min-w-max divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700">
+                        Name
+                      </th>
+                      <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700">
+                        Email
+                      </th>
+                      <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700">
+                        Subject
+                      </th>
+                      <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700 max-w-xs">
+                        Message
+                      </th>
+                      <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700">
+                        Date
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {feedbacks.map((fb) => (
+                      <tr key={fb.id} className="hover:bg-gray-50">
+                        <td className="py-2 px-4 whitespace-nowrap">{fb.name}</td>
+                        <td className="py-2 px-4 whitespace-nowrap">{fb.email}</td>
+                        <td className="py-2 px-4 whitespace-nowrap">{fb.subject}</td>
+                        <td
+                          className="py-2 px-4 max-w-xs truncate"
+                          title={fb.message}
+                        >
+                          {fb.message}
+                        </td>
+                        <td className="py-2 px-4 whitespace-nowrap">
+                          {new Date(fb.created_at).toLocaleString()}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <p className="p-6 text-center text-gray-500">No feedback yet.</p>
+              )}
+            </div>
           </TabsContent>
         </Tabs>
       </div>

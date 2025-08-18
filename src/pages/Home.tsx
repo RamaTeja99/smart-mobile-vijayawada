@@ -103,7 +103,7 @@ const Home = () => {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex items-center space-x-2">
-                    <span className="text-2xl font-bold text-primary">{product.price_display}</span>
+                    <span className="text-2xl font-bold text-primary">₹ {product.price_display.slice(1)}</span>
                     {product.original_price && product.original_price > product.price && (
                       <span className="text-lg text-muted-foreground line-through">
                         ₹{product.original_price}

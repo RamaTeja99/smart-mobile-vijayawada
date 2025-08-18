@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { MapPin, Phone, Mail, Share2, MessageSquare, Instagram, Youtube, Star, ExternalLink } from "lucide-react";
+import apiClient from "./api";
 
 const Contact = () => {
   const widgetContainerRef = useRef<HTMLDivElement>(null);
@@ -46,38 +47,27 @@ const Contact = () => {
     }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-
-    try{
+ const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setIsSubmitting(true);
+  try {
     
-    // Simulate form submission
-    await new Promise(resolve => setTimeout(resolve, 2000));
-
-    toast({
-      title: "Message Sent Successfully!",
-      description: "Thank you for your inquiry. We'll get back to you within 24 hours.",
-    });
-
-    // Reset form
-    setFormData({
-      name: "",
-      email: "",
-      phone: "",
-      subject: "",
-      message: ""
-    });
-  } catch {
-    toast({
-      title: "Failed to send message",
-      description: "Please try again later.",
-      variant: "destructive",
-    });
+    const data = await apiClient.submitFeedback(formData);
+    if (data.status === "success") {
+      toast({
+        title: "Message Sent Successfully!",
+        description: "Thank you for your inquiry. We'll get back to you within 24 hours.",
+      });
+      setFormData({ name: "", email: "", phone: "", subject: "", message: "" });
+    } else {
+      toast({ title: "Error", description: data.message, variant: "destructive" });
+    }
+  } catch (error) {
+    toast({ title: "Error", description: "An error occurred.", variant: "destructive" });
   }
+  setIsSubmitting(false);
+};
 
-    setIsSubmitting(false);
-  };
 
   const contactInfo = [
     {
