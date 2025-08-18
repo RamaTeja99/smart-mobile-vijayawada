@@ -252,6 +252,26 @@ class ApiClient {
     TokenManager.clearTokens();
     return result;
   }
+  // Add to api.ts
+
+   async getFeedbackList(params: { page?: number; limit?: number } = { page: 1, limit: 50 }): Promise<ApiResponse<any[]>> {
+    const queryString = new URLSearchParams(
+      Object.entries(params).map(([k, v]) => [k, String(v)])
+    ).toString();
+    return this.request<any[]>(`/admin/feedback?${queryString}`);
+  }
+  async submitFeedback(data: {
+  name: string;
+  email: string;
+  phone?: string;
+  subject: string;
+  message: string;
+}): Promise<ApiResponse<any>> {
+  return this.request('/feedback', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
 
   async getProfile(): Promise<ApiResponse<AdminUser>> {
     return this.request<AdminUser>('/auth/profile');
