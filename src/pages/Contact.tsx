@@ -50,6 +50,8 @@ const Contact = () => {
     e.preventDefault();
     setIsSubmitting(true);
 
+    try{
+    
     // Simulate form submission
     await new Promise(resolve => setTimeout(resolve, 2000));
 
@@ -66,6 +68,14 @@ const Contact = () => {
       subject: "",
       message: ""
     });
+  } catch {
+    toast({
+      title: "Failed to send message",
+      description: "Please try again later.",
+      variant: "destructive",
+    });
+  }
+
     setIsSubmitting(false);
   };
 
