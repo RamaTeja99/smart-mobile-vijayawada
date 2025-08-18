@@ -4,62 +4,120 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import { Link } from "react-router-dom";
 import { Search, Star, Filter, Loader2 } from "lucide-react";
 import { useAllProducts, useProductSearch, useSearchFilters } from "./hooks";
 import { Product, SearchParams } from "./api";
-
+const ALL_PRICE_MAX = 99999999;
 const Products = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedBrand, setSelectedBrand] = useState<string>("all");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [selectedPriceLabel, setSelectedPriceLabel] = useState("all");
   const [minPrice, setMinPrice] = useState<number>(0);
   const [maxPrice, setMaxPrice] = useState<number | undefined>();
-  const [sortBy, setSortBy] = useState<string>("relevance");
+  const [sortBy, setSortBy] = useState<
+    "relevance" | "price" | "name" | "rating" | "date"
+  >("relevance");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [inStock, setInStock] = useState<boolean>(false);
   const [currentPage, setCurrentPage] = useState(1);
 
   // Fetch brands, categories, price ranges
   const { filters, loading: filtersLoading } = useSearchFilters();
 
-  // Build API params — only add keys if filters are active
+  const handleSortChange = (value: string) => {
+    if (value === "price") {
+      setSortBy("price");
+      setSortOrder("asc");
+    } else if (value === "price-high") {
+      setSortBy("price");
+      setSortOrder("desc");
+    } else if (value === "relevance") {
+      setSortBy("relevance");
+      setSortOrder("desc");
+    } else if (value === "rating") {
+      setSortBy("rating");
+      setSortOrder("desc");
+    } else if (value === "date") {
+      setSortBy("date");
+      setSortOrder("desc");
+    } else if (value === "name") {
+      setSortBy("name");
+      setSortOrder("asc");
+    }
+  };
+
+  const isAllPrices = selectedPriceLabel === "all";
+  const effectiveMinPrice = isAllPrices ? 0 : minPrice;
+  const effectiveMaxPrice = isAllPrices
+    ? ALL_PRICE_MAX
+    : typeof maxPrice === "number"
+    ? maxPrice
+    : ALL_PRICE_MAX;
+
+  // then build searchParams object:
   const searchParams: SearchParams = {
     ...(searchQuery && { query: searchQuery }),
     ...(selectedBrand !== "all" && { brand: selectedBrand }),
     ...(selectedCategory !== "all" && { category: selectedCategory }),
-    ...(minPrice > 0 && { min_price: minPrice }),
-    ...(maxPrice && { max_price: maxPrice }),
-    ...(inStock && { in_stock: inStock }),
-    sort_by: sortBy as any,
-    sort_order: sortBy === "price" ? "asc" : "desc",
+    minPrice: effectiveMinPrice,
+    maxPrice: effectiveMaxPrice,
+    ...(inStock && { inStock }),
+    sortBy,
+    sortOrder,
     limit: 12,
-    offset: (currentPage - 1) * 12
+    offset: (currentPage - 1) * 12,
   };
-// Always call both hooks
-const { products: allProducts, loading: allLoading, error: allError } = useAllProducts();
-const { results, loading: searchLoading, error: searchError, metadata: searchMeta } = useProductSearch(searchParams);
 
-const isAll =
-  !searchQuery &&
-  selectedBrand === "all" &&
-  selectedCategory === "all" &&
-  minPrice === 0 &&
-  !maxPrice &&
-  !inStock;
+  // Always call both hooks
+  const {
+    products: allProducts,
+    loading: allLoading,
+    error: allError,
+  } = useAllProducts();
+  const {
+    results,
+    loading: searchLoading,
+    error: searchError,
+    metadata: searchMeta,
+  } = useProductSearch(searchParams);
 
-const products = isAll ? allProducts : results;
-const loading = isAll ? allLoading : searchLoading;
-const error = isAll ? allError : searchError;
-const metadata = isAll ? { total: allProducts.length, hasNext: false, hasPrev: false } : searchMeta;
+  const isAll =
+    !searchQuery &&
+    selectedBrand === "all" &&
+    selectedCategory === "all" &&
+    (selectedPriceLabel === "all" ||
+      (minPrice === 0 && maxPrice === 99999999)) &&
+    !inStock;
 
-
+  const products = isAll ? allProducts : results;
+  const loading = isAll ? allLoading : searchLoading;
+  const error = isAll ? allError : searchError;
+  const metadata = isAll
+    ? { total: allProducts.length, hasNext: false, hasPrev: false }
+    : searchMeta;
 
   // Reset page when any filter/search changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, selectedBrand, selectedCategory, minPrice, maxPrice, sortBy, inStock]);
+  }, [
+    searchQuery,
+    selectedBrand,
+    selectedCategory,
+    selectedPriceLabel,
+    minPrice,
+    maxPrice,
+    sortBy,
+    sortOrder,
+    inStock,
+  ]);
 
   // Single product card
   const ProductCard = ({ product }: { product: Product }) => (
@@ -67,7 +125,9 @@ const metadata = isAll ? { total: allProducts.length, hasNext: false, hasPrev: f
       <CardContent className="p-4">
         <div className="relative mb-4">
           <img
-            src={product.featured_image || product.images[0] || "/placeholder.svg"}
+            src={
+              product.featured_image || product.images[0] || "/placeholder.svg"
+            }
             alt={product.name}
             className="w-full h-48 object-cover rounded-lg"
             onError={(e) => {
@@ -101,7 +161,9 @@ const metadata = isAll ? { total: allProducts.length, hasNext: false, hasPrev: f
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-sm text-gray-500">{product.brand?.name}</span>
-            <span className="text-sm text-gray-500">{product.category?.name}</span>
+            <span className="text-sm text-gray-500">
+              {product.category?.name}
+            </span>
           </div>
 
           <h3 className="font-semibold text-lg line-clamp-2">{product.name}</h3>
@@ -115,13 +177,17 @@ const metadata = isAll ? { total: allProducts.length, hasNext: false, hasPrev: f
           <div className="flex items-center gap-1">
             <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
             <span className="text-sm text-gray-600">
-              {product.average_rating.toFixed(1)} ({product.total_reviews} reviews)
+              {product.average_rating.toFixed(1)} ({product.total_reviews}{" "}
+              reviews)
             </span>
           </div>
 
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="text-xl font-bold text-green-600"> ₹ {product.price_display.slice(1)}</span>
+              <span className="text-xl font-bold text-green-600">
+                {" "}
+                ₹ {product.price_display.slice(1)}
+              </span>
               {product.original_price &&
                 product.original_price > product.price && (
                   <span className="text-sm text-gray-500 line-through">
@@ -145,12 +211,12 @@ const metadata = isAll ? { total: allProducts.length, hasNext: false, hasPrev: f
   const handlePriceRangeChange = (range: string) => {
     if (range === "all") {
       setMinPrice(0);
-      setMaxPrice(undefined);
+      setMaxPrice(99999999);
     } else {
       const priceRange = filters?.priceRanges.find((p) => p.label === range);
       if (priceRange) {
         setMinPrice(priceRange.min);
-        setMaxPrice(priceRange.max || undefined);
+        setMaxPrice(priceRange.max ?? 99999999);
       }
     }
   };
@@ -169,7 +235,9 @@ const metadata = isAll ? { total: allProducts.length, hasNext: false, hasPrev: f
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Our Products</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Our Products
+          </h1>
           <p className="text-gray-600">
             Browse our catalog or use filters to find exactly what you need.
           </p>
@@ -210,7 +278,10 @@ const metadata = isAll ? { total: allProducts.length, hasNext: false, hasPrev: f
 
             {/* Category */}
             <div>
-              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+              <Select
+                value={selectedCategory}
+                onValueChange={setSelectedCategory}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="All Categories" />
                 </SelectTrigger>
@@ -228,8 +299,11 @@ const metadata = isAll ? { total: allProducts.length, hasNext: false, hasPrev: f
             {/* Price */}
             <div>
               <Select
-                value={`${minPrice}-${maxPrice || "max"}`}
-                onValueChange={handlePriceRangeChange}
+                value={selectedPriceLabel}
+                onValueChange={(val) => {
+                  setSelectedPriceLabel(val);
+                  handlePriceRangeChange(val);
+                }}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Price Range" />
@@ -247,7 +321,7 @@ const metadata = isAll ? { total: allProducts.length, hasNext: false, hasPrev: f
 
             {/* Sort */}
             <div>
-              <Select value={sortBy} onValueChange={setSortBy}>
+              <Select value={sortBy} onValueChange={handleSortChange}>
                 <SelectTrigger>
                   <SelectValue placeholder="Sort by" />
                 </SelectTrigger>
@@ -281,6 +355,7 @@ const metadata = isAll ? { total: allProducts.length, hasNext: false, hasPrev: f
                 setSearchQuery("");
                 setSelectedBrand("all");
                 setSelectedCategory("all");
+                setSelectedPriceLabel("all");
                 setMinPrice(0);
                 setMaxPrice(undefined);
                 setSortBy("relevance");
@@ -350,8 +425,11 @@ const metadata = isAll ? { total: allProducts.length, hasNext: false, hasPrev: f
                     setSearchQuery("");
                     setSelectedBrand("all");
                     setSelectedCategory("all");
+                    setSelectedPriceLabel("all");
                     setMinPrice(0);
                     setMaxPrice(undefined);
+                    setSortBy("relevance");
+                    setSortOrder("asc");
                     setInStock(false);
                     setCurrentPage(1);
                   }}
