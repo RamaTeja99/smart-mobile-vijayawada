@@ -50,7 +50,6 @@ const Contact = () => {
  const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
   setIsSubmitting(true);
-
   try {
     
     const data = await apiClient.submitFeedback(formData);
