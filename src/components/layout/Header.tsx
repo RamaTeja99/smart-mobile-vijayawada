@@ -2,10 +2,24 @@ import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Menu, Phone, Mail, User, LogOut, Settings, Shield } from "lucide-react";
-import { useAuth } from "../../pages/AuthContext";
+import {
+  Menu,
+  Phone,
+  Mail,
+  User,
+  LogOut,
+  Settings,
+  Shield,
+} from "lucide-react";
+import { useAuth } from "../../lib/AuthContext";
 
 const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -50,7 +64,11 @@ const Header = () => {
         {/* Desktop Navigation Left */}
         <div className="mr-4 hidden md:flex">
           <Link to="/" className="mr-6 flex items-center space-x-2">
-            <img src="/favicon.ico" alt="Smart Mobile Logo" className="h-8 w-auto" />
+            <img
+              src="/favicon.ico"
+              alt="Smart Mobile Logo"
+              className="h-8 w-auto"
+            />
             <span className="font-bold text-xl">SMART MOBILE</span>
           </Link>
           <nav className="flex items-center space-x-6 text-sm font-medium">
@@ -97,7 +115,9 @@ const Header = () => {
                   to={item.href}
                   onClick={() => setIsOpen(false)}
                   className={`block px-2 py-1 text-lg ${
-                    isActive(item.href) ? "text-primary" : "text-muted-foreground"
+                    isActive(item.href)
+                      ? "text-primary"
+                      : "text-muted-foreground"
                   }`}
                 >
                   {item.name}
@@ -111,13 +131,18 @@ const Header = () => {
                 <div className="space-y-3">
                   <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                     <Avatar className="h-10 w-10">
-                      <AvatarImage src={user?.avatar_url} alt={getUserDisplayName()} />
+                      <AvatarImage
+                        src={user?.avatar_url}
+                        alt={getUserDisplayName()}
+                      />
                       <AvatarFallback className="bg-blue-600 text-white">
                         {getUserInitials()}
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <p className="text-sm font-medium">{getUserDisplayName()}</p>
+                      <p className="text-sm font-medium">
+                        {getUserDisplayName()}
+                      </p>
                       <p className="text-xs text-gray-600">{user?.email}</p>
                       <div className="flex items-center gap-1">
                         <Shield className="h-3 w-3 text-blue-600" />
@@ -185,13 +210,19 @@ const Header = () => {
           {/* Desktop contact + auth */}
           <nav className="flex items-center space-x-4">
             <Button variant="ghost" size="sm" className="hidden md:flex">
-               <a href="mailto:smartmobile007788@gmail.com" className="flex items-center space-x-2">
-              <Mail className="h-4 w-4 mr-2" /> smartmobile007788@gmail.com
+              <a
+                href="mailto:smartmobile007788@gmail.com"
+                className="flex items-center space-x-2"
+              >
+                <Mail className="h-4 w-4 mr-2" /> smartmobile007788@gmail.com
               </a>
             </Button>
             <Button variant="ghost" size="sm" className="hidden md:flex">
-               <a href="tel:+919985007788" className="flex items-center space-x-2">
-              <Phone className="h-4 w-4 mr-2" /> +91 9985 007 788
+              <a
+                href="tel:+919985007788"
+                className="flex items-center space-x-2"
+              >
+                <Phone className="h-4 w-4 mr-2" /> +91 9985 007 788
               </a>
             </Button>
 
@@ -199,9 +230,15 @@ const Header = () => {
             {isAuthenticated ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                  <Button
+                    variant="ghost"
+                    className="relative h-8 w-8 rounded-full"
+                  >
                     <Avatar className="h-8 w-8">
-                      <AvatarImage src={user?.avatar_url} alt={getUserDisplayName()} />
+                      <AvatarImage
+                        src={user?.avatar_url}
+                        alt={getUserDisplayName()}
+                      />
                       <AvatarFallback className="bg-blue-600 text-white text-xs">
                         {getUserInitials()}
                       </AvatarFallback>
@@ -211,8 +248,12 @@ const Header = () => {
                 <DropdownMenuContent className="w-56" align="end" forceMount>
                   <div className="flex items-center justify-start gap-2 p-2">
                     <div className="flex flex-col space-y-1 leading-none">
-                      <p className="text-sm font-medium">{getUserDisplayName()}</p>
-                      <p className="text-xs text-muted-foreground">{user?.email}</p>
+                      <p className="text-sm font-medium">
+                        {getUserDisplayName()}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {user?.email}
+                      </p>
                       <div className="flex items-center gap-1">
                         <Shield className="h-3 w-3 text-blue-600" />
                         <span className="text-xs text-blue-600 capitalize">

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import Papa from "papaparse";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -14,7 +15,7 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import apiClient, { Product, Brand, Category } from "@/pages/api";
+import apiClient, { Product, Brand, Category } from "@/components/api/api";
 
 const CreateProduct = () => {
   const navigate = useNavigate();
@@ -59,10 +60,10 @@ const CreateProduct = () => {
     is_new: false,
     images: [],
     specifications: [
-    { key: "", value: "" },
-    { key: "", value: "" },
-    { key: "", value: "" },
-  ],
+      { key: "", value: "" },
+      { key: "", value: "" },
+      { key: "", value: "" },
+    ],
   });
 
   // Fetch brands & categories on mount
@@ -93,24 +94,27 @@ const CreateProduct = () => {
       [name]: value,
     }));
   };
-  const handleSpecChange = (index: number, field: "key" | "value", value: string) => {
-  const specs = [...formData.specifications];
-  specs[index][field] = value;
-  setFormData({ ...formData, specifications: specs });
-};
+  const handleSpecChange = (
+    index: number,
+    field: "key" | "value",
+    value: string
+  ) => {
+    const specs = [...formData.specifications];
+    specs[index][field] = value;
+    setFormData({ ...formData, specifications: specs });
+  };
 
-const addSpecification = () => {
-  setFormData({
-    ...formData,
-    specifications: [...formData.specifications, { key: "", value: "" }],
-  });
-};
+  const addSpecification = () => {
+    setFormData({
+      ...formData,
+      specifications: [...formData.specifications, { key: "", value: "" }],
+    });
+  };
 
-const removeSpecification = (index: number) => {
-  const specs = formData.specifications.filter((_, i) => i !== index);
-  setFormData({ ...formData, specifications: specs });
-};
-
+  const removeSpecification = (index: number) => {
+    const specs = formData.specifications.filter((_, i) => i !== index);
+    setFormData({ ...formData, specifications: specs });
+  };
 
   // Add image link
   const addImage = () => {
@@ -129,16 +133,128 @@ const removeSpecification = (index: number) => {
     const updated = formData.images.filter((_, i) => i !== index);
     setFormData({ ...formData, images: updated });
   };
+  // CSV example download handler
+  function downloadExampleCSV() {
+    const exampleObj = {
+      name: formData.name || "Sample Product",
+      price: formData.price || "199.99",
+      original_price: formData.original_price || "249.99",
+      stock_quantity: formData.stock_quantity || "100",
+      short_description: formData.short_description || "Short desc",
+      description: formData.description || "Full desc",
+      model: formData.model || "SP-001",
+      sku: formData.sku || "SKU001",
+      brand_id: formData.brand_id || "", // user should fill actual id
+      category_id: formData.category_id || "", // user should fill actual id
+      status: formData.status,
+      is_featured: formData.is_featured.toString(),
+      is_bestseller: formData.is_bestseller.toString(),
+      is_new: formData.is_new.toString(),
+      images:
+        formData.images.join(";") ||
+        "https://img.com/1.jpg;https://img.com/2.jpg",
+      specifications:
+        formData.specifications
+          .map(({ key, value }) => `${key}:${value}`)
+          .join(";") || "Color:Red;Size:M",
+    };
+    const csv = Papa.unparse([exampleObj]);
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "example_products.csv";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
 
+  // CSV upload and parse handler
+  const handleCSVFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setLoading(true);
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: async (results: Papa.ParseResult<any>) => {
+        const rows = results.data as Record<string, string>[];
+        let successCount = 0;
+        let failCount = 0;
+
+        for (let i = 0; i < rows.length; i++) {
+          const row = rows[i];
+
+          const specs: Record<string, string> = {};
+          (row.specifications || "")
+            .split(";")
+            .map((s) => s.split(":"))
+            .forEach(([key, value]) => {
+              if (key?.trim()) specs[key.trim()] = (value ?? "").trim();
+            });
+
+          const images = row.images
+            ? row.images
+                .split(";")
+                .map((img) => img.trim())
+                .filter((v) => v)
+            : [];
+
+          const productData: Partial<Product> & {
+            brand_id?: string;
+            category_id?: string;
+          } = {
+            name: row.name,
+            price: parseFloat(row.price),
+            original_price: row.original_price
+              ? parseFloat(row.original_price)
+              : undefined,
+            stock_quantity: parseInt(row.stock_quantity, 10) || 0,
+            short_description: row.short_description,
+            description: row.description,
+            model: row.model,
+            sku: row.sku || undefined,
+            brand_id: row.brand_id || undefined,
+            category_id: row.category_id || undefined,
+            status: row.status as "active" | "inactive" | "out_of_stock",
+            is_featured: row.is_featured === "true",
+            is_bestseller: row.is_bestseller === "true",
+            is_new: row.is_new === "true",
+            images,
+            specifications: specs,
+          };
+
+          try {
+            const resp = await apiClient.createProduct(productData);
+            if (resp.status === "success") {
+              successCount++;
+            } else {
+              failCount++;
+            }
+          } catch (err) {
+            failCount++;
+          }
+        }
+        setLoading(false);
+        toast.success(
+          `Bulk upload finished: ${successCount} success, ${failCount} failed`
+        );
+      },
+      error: (err) => {
+        setLoading(false);
+        toast.error(`CSV parse error: ${err.message}`);
+      },
+    });
+  };
   // Submit handler
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-     let specsObj: Record<string, string> = {};
+      let specsObj: Record<string, string> = {};
 
-     formData.specifications.forEach(({ key, value }) => {
+      formData.specifications.forEach(({ key, value }) => {
         if (key.trim()) {
           specsObj[key.trim()] = value.trim();
         }
@@ -208,7 +324,37 @@ const removeSpecification = (index: number) => {
             </Button>
           </CardTitle>
         </CardHeader>
+        <CardContent>
+          {/* Bulk Add Section */}
+          <div className="mb-6 p-4 border rounded-lg bg-gray-50">
+            <div className="flex items-center gap-4 mb-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={downloadExampleCSV}
+              >
+                Download Example CSV
+              </Button>
+              <input
+                accept=".csv"
+                type="file"
+                onChange={handleCSVFile}
+                className="block"
+                style={{ fontSize: "0.95rem" }}
+                disabled={loading}
+              />
+            </div>
+            <small>
+              Upload CSV with columns: name, price, original_price,
+              stock_quantity, short_description, description, model, sku,
+              brand_id, category_id, status, is_featured, is_bestseller, is_new,
+              images (semicolon separated), specifications (semicolon separated
+              key:value)
+            </small>
+          </div>
 
+          <form onSubmit={handleSubmit} className="space-y-6"></form>
+        </CardContent>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Basic info */}
@@ -243,7 +389,9 @@ const removeSpecification = (index: number) => {
                 <Input
                   type="number"
                   value={formData.original_price}
-                  onChange={(e) => handleChange("original_price", e.target.value)}
+                  onChange={(e) =>
+                    handleChange("original_price", e.target.value)
+                  }
                 />
               </div>
 
@@ -399,37 +547,44 @@ const removeSpecification = (index: number) => {
 
             {/* Specifications */}
             <div>
-  <Label>Specifications</Label>
-  {formData.specifications.map((spec, index) => (
-    <div key={index} className="flex gap-2 mb-2">
-      <Input
-        placeholder="Key"
-        value={spec.key}
-        onChange={(e) => handleSpecChange(index, "key", e.target.value)}
-        className="flex-1"
-      />
-      <Input
-        placeholder="Value"
-        value={spec.value}
-        onChange={(e) => handleSpecChange(index, "value", e.target.value)}
-        className="flex-1"
-      />
-      {formData.specifications.length > 3 && (
-        <Button
-          variant="destructive"
-          type="button"
-          onClick={() => removeSpecification(index)}
-        >
-          Remove
-        </Button>
-      )}
-    </div>
-  ))}
-  <Button type="button" variant="outline" onClick={addSpecification}>
-    Add Specification
-  </Button>
-</div>
-
+              <Label>Specifications</Label>
+              {formData.specifications.map((spec, index) => (
+                <div key={index} className="flex gap-2 mb-2">
+                  <Input
+                    placeholder="Key"
+                    value={spec.key}
+                    onChange={(e) =>
+                      handleSpecChange(index, "key", e.target.value)
+                    }
+                    className="flex-1"
+                  />
+                  <Input
+                    placeholder="Value"
+                    value={spec.value}
+                    onChange={(e) =>
+                      handleSpecChange(index, "value", e.target.value)
+                    }
+                    className="flex-1"
+                  />
+                  {formData.specifications.length > 3 && (
+                    <Button
+                      variant="destructive"
+                      type="button"
+                      onClick={() => removeSpecification(index)}
+                    >
+                      Remove
+                    </Button>
+                  )}
+                </div>
+              ))}
+              <Button
+                type="button"
+                variant="outline"
+                onClick={addSpecification}
+              >
+                Add Specification
+              </Button>
+            </div>
 
             {/* Actions */}
             <div className="flex justify-end gap-4">

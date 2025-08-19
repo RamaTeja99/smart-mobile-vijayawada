@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, Eye, EyeOff, Shield, ArrowLeft } from "lucide-react";
-import { useAuth } from "./AuthContext";
+import { useAuth } from "../../lib/AuthContext";
 
 const AdminLogin = () => {
   const [email, setEmail] = useState("");
@@ -26,10 +26,10 @@ const AdminLogin = () => {
     try {
       const success = await login({ email, password });
       if (success) {
-        navigate('/admin/dashboard');
+        navigate("/admin/dashboard");
       }
     } catch (err) {
-      setError('An unexpected error occurred. Please try again.');
+      setError("An unexpected error occurred. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -53,9 +53,7 @@ const AdminLogin = () => {
           <div className="mx-auto w-16 h-16 bg-blue-600 rounded-lg flex items-center justify-center mb-6">
             <Shield className="h-8 w-8 text-white" />
           </div>
-          <h2 className="text-3xl font-bold text-gray-900">
-            Admin Login
-          </h2>
+          <h2 className="text-3xl font-bold text-gray-900">Admin Login</h2>
           <p className="mt-2 text-sm text-gray-600">
             Sign in to access the admin dashboard
           </p>
@@ -125,13 +123,19 @@ const AdminLogin = () => {
                     type="checkbox"
                     className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                   />
-                  <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
+                  <label
+                    htmlFor="remember-me"
+                    className="ml-2 block text-sm text-gray-900"
+                  >
                     Remember me
                   </label>
                 </div>
 
                 <div className="text-sm">
-                  <a href="#" className="font-medium text-blue-600 hover:text-blue-500">
+                  <a
+                    href="#"
+                    className="font-medium text-blue-600 hover:text-blue-500"
+                  >
                     Forgot your password?
                   </a>
                 </div>
@@ -148,7 +152,7 @@ const AdminLogin = () => {
                     Signing in...
                   </>
                 ) : (
-                  'Sign in'
+                  "Sign in"
                 )}
               </Button>
             </form>
@@ -159,7 +163,10 @@ const AdminLogin = () => {
         <div className="mt-8 text-center">
           <p className="text-sm text-gray-600">
             Not an admin?{" "}
-            <Link to="/" className="font-medium text-blue-600 hover:text-blue-500">
+            <Link
+              to="/"
+              className="font-medium text-blue-600 hover:text-blue-500"
+            >
               Return to main site
             </Link>
           </p>

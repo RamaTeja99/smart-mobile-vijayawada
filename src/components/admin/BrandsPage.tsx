@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useNavigate } from 'react-router-dom';
-import { ChevronLeft } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
+import React, { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useNavigate } from "react-router-dom";
+import { ChevronLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Table,
   TableBody,
@@ -15,14 +15,15 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from "@/components/ui/table";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,69 +33,70 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { 
-  Plus, 
-  Edit, 
-  Trash2, 
-  Loader2, 
+} from "@/components/ui/alert-dialog";
+import {
+  Plus,
+  Edit,
+  Trash2,
+  Loader2,
   Search,
-  Image as ImageIcon
-} from 'lucide-react';
-import { toast } from 'sonner';
-import apiClient, { Category } from '@/pages/api';
+  ExternalLink,
+} from "lucide-react";
+import { toast } from "sonner";
+import apiClient, { Brand } from "@/components/api/api";
 
-const CategoriesPage: React.FC = () => {
-  const [categories, setCategories] = useState<Category[]>([]);
+const BrandsPage: React.FC = () => {
+  const [brands, setBrands] = useState<Brand[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filteredCategories, setFilteredCategories] = useState<Category[]>([]);
-  
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filteredBrands, setFilteredBrands] = useState<Brand[]>([]);
+
   // Dialog states
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
-  
+  const [selectedBrand, setSelectedBrand] = useState<Brand | null>(null);
+
   // Form states
   const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    image_url: '',
+    name: "",
+    description: "",
+    website_url: "",
     is_active: true,
-    sort_order: 0
+    sort_order: 0,
   });
 
   useEffect(() => {
-    fetchCategories();
+    fetchBrands();
   }, []);
 
   useEffect(() => {
     if (searchTerm) {
-      setFilteredCategories(
-        categories.filter(category =>
-          category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          category.description?.toLowerCase().includes(searchTerm.toLowerCase())
+      setFilteredBrands(
+        brands.filter(
+          (brand) =>
+            brand.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            brand.description?.toLowerCase().includes(searchTerm.toLowerCase())
         )
       );
     } else {
-      setFilteredCategories(categories);
+      setFilteredBrands(brands);
     }
-  }, [categories, searchTerm]);
+  }, [brands, searchTerm]);
 
-  const fetchCategories = async () => {
+  const fetchBrands = async () => {
     try {
       setLoading(true);
-      const response = await apiClient.getCategories();
-      
-      if (response.status === 'success') {
-        setCategories(response.data || []);
+      const response = await apiClient.getBrands();
+
+      if (response.status === "success") {
+        setBrands(response.data || []);
       } else {
-        toast.error('Failed to fetch categories');
+        toast.error("Failed to fetch brands");
       }
     } catch (error) {
-      toast.error('Failed to load categories');
+      toast.error("Failed to load brands");
     } finally {
       setLoading(false);
     }
@@ -102,11 +104,11 @@ const CategoriesPage: React.FC = () => {
 
   const resetForm = () => {
     setFormData({
-      name: '',
-      description: '',
-      image_url: '',
+      name: "",
+      description: "",
+      website_url: "",
       is_active: true,
-      sort_order: 0
+      sort_order: 0,
     });
   };
 
@@ -115,92 +117,99 @@ const CategoriesPage: React.FC = () => {
     setCreateDialogOpen(true);
   };
 
-  const handleEditClick = (category: Category) => {
-    setSelectedCategory(category);
+  const handleEditClick = (brand: Brand) => {
+    setSelectedBrand(brand);
     setFormData({
-      name: category.name,
-      description: category.description || '',
-      image_url: category.image_url || '',
-      is_active: category.is_active,
-      sort_order: category.sort_order
+      name: brand.name,
+      description: brand.description || "",
+      website_url: brand.website_url || "",
+      is_active: brand.is_active,
+      sort_order: brand.sort_order,
     });
     setEditDialogOpen(true);
   };
 
-  const handleDeleteClick = (category: Category) => {
-    setSelectedCategory(category);
+  const handleDeleteClick = (brand: Brand) => {
+    setSelectedBrand(brand);
     setDeleteDialogOpen(true);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.name.trim()) {
-      toast.error('Category name is required');
+      toast.error("Brand name is required");
       return;
     }
 
     try {
       setSubmitting(true);
       let response;
-      
-      if (selectedCategory) {
-        // Update existing category
-        response = await apiClient.updateCategory(selectedCategory.id, formData);
+
+      if (selectedBrand) {
+        // Update existing brand
+        response = await apiClient.updateBrand(selectedBrand.id, formData);
       } else {
-        // Create new category
-        response = await apiClient.createCategory(formData);
+        // Create new brand
+        response = await apiClient.createBrand(formData);
       }
 
-      if (response.status === 'success') {
-        toast.success(selectedCategory ? 'Category updated successfully' : 'Category created successfully');
+      if (response.status === "success") {
+        toast.success(
+          selectedBrand
+            ? "Brand updated successfully"
+            : "Brand created successfully"
+        );
         setCreateDialogOpen(false);
         setEditDialogOpen(false);
-        setSelectedCategory(null);
+        setSelectedBrand(null);
         resetForm();
-        fetchCategories();
+        fetchBrands();
       } else {
-        toast.error(response.message || `Failed to ${selectedCategory ? 'update' : 'create'} category`);
+        toast.error(
+          response.message ||
+            `Failed to ${selectedBrand ? "update" : "create"} brand`
+        );
       }
     } catch (error) {
-      toast.error(`Failed to ${selectedCategory ? 'update' : 'create'} category`);
+      toast.error(`Failed to ${selectedBrand ? "update" : "create"} brand`);
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleDelete = async () => {
-    if (!selectedCategory) return;
+    if (!selectedBrand) return;
 
     try {
       setSubmitting(true);
-      const response = await apiClient.deleteCategory(selectedCategory.id);
+      const response = await apiClient.deleteBrand(selectedBrand.id);
 
-      if (response.status === 'success') {
-        toast.success('Category deleted successfully');
-        setCategories(categories.filter(c => c.id !== selectedCategory.id));
+      if (response.status === "success") {
+        toast.success("Brand deleted successfully");
+        setBrands(brands.filter((b) => b.id !== selectedBrand.id));
         setDeleteDialogOpen(false);
-        setSelectedCategory(null);
+        setSelectedBrand(null);
       } else {
-        toast.error(response.message || 'Failed to delete category');
+        toast.error(response.message || "Failed to delete brand");
       }
     } catch (error) {
-      toast.error('Failed to delete category');
+      toast.error("Failed to delete brand");
     } finally {
       setSubmitting(false);
     }
   };
 
-  const CategoryForm = () => (
+  const BrandForm = () => (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {/* Category Name */}
+      {/* Brand Name */}
       <div>
-        <Label htmlFor="name">Category Name *</Label>
+        <Label htmlFor="name">Brand Name *</Label>
         <Input
           id="name"
           value={formData.name}
           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-          placeholder="Enter category name"
+          placeholder="Enter brand name"
           required
         />
       </div>
@@ -211,34 +220,26 @@ const CategoriesPage: React.FC = () => {
         <Textarea
           id="description"
           value={formData.description}
-          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-          placeholder="Enter category description"
+          onChange={(e) =>
+            setFormData({ ...formData, description: e.target.value })
+          }
+          placeholder="Enter brand description"
           rows={3}
         />
       </div>
 
-      {/* Image URL */}
+      {/* Website URL */}
       <div>
-        <Label htmlFor="image_url">Image URL</Label>
+        <Label htmlFor="website_url">Website URL</Label>
         <Input
-          id="image_url"
+          id="website_url"
           type="url"
-          value={formData.image_url}
-          onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-          placeholder="https://example.com/image.jpg"
+          value={formData.website_url}
+          onChange={(e) =>
+            setFormData({ ...formData, website_url: e.target.value })
+          }
+          placeholder="https://example.com"
         />
-        {formData.image_url && (
-          <div className="mt-2">
-            <img
-              src={formData.image_url}
-              alt="Category preview"
-              className="w-16 h-16 object-cover rounded"
-              onError={(e) => {
-                (e.target as HTMLImageElement).style.display = 'none';
-              }}
-            />
-          </div>
-        )}
       </div>
 
       {/* Sort Order */}
@@ -248,7 +249,12 @@ const CategoriesPage: React.FC = () => {
           id="sort_order"
           type="number"
           value={formData.sort_order}
-          onChange={(e) => setFormData({ ...formData, sort_order: parseInt(e.target.value) || 0 })}
+          onChange={(e) =>
+            setFormData({
+              ...formData,
+              sort_order: parseInt(e.target.value) || 0,
+            })
+          }
           min="0"
         />
       </div>
@@ -258,7 +264,9 @@ const CategoriesPage: React.FC = () => {
         <Checkbox
           id="is_active"
           checked={formData.is_active}
-          onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked as boolean })}
+          onCheckedChange={(checked) =>
+            setFormData({ ...formData, is_active: checked as boolean })
+          }
         />
         <Label htmlFor="is_active">Active</Label>
       </div>
@@ -271,7 +279,7 @@ const CategoriesPage: React.FC = () => {
           onClick={() => {
             setCreateDialogOpen(false);
             setEditDialogOpen(false);
-            setSelectedCategory(null);
+            setSelectedBrand(null);
             resetForm();
           }}
           disabled={submitting}
@@ -282,48 +290,54 @@ const CategoriesPage: React.FC = () => {
           {submitting ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin mr-2" />
-              {selectedCategory ? 'Updating...' : 'Creating...'}
+              {selectedBrand ? "Updating..." : "Creating..."}
             </>
+          ) : selectedBrand ? (
+            "Update Brand"
           ) : (
-            selectedCategory ? 'Update Category' : 'Create Category'
+            "Create Brand"
           )}
         </Button>
       </div>
     </form>
   );
-const navigate = useNavigate();
+  const navigate = useNavigate();
 
   const handleBack = () => {
-    navigate('/admin/dashboard');
+    navigate("/admin/dashboard");
   };
 
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Header */}
       <div className="flex justify-between items-center mb-8">
-         <Button variant="outline" onClick={handleBack} className="flex items-center gap-2">
-      <ChevronLeft className="w-4 h-4" />
-      Back to Dashboard
-    </Button>
+        <Button
+          variant="outline"
+          onClick={handleBack}
+          className="flex items-center gap-2"
+        >
+          <ChevronLeft className="w-4 h-4" />
+          Back to Dashboard
+        </Button>
         <div>
-          <h1 className="text-3xl font-bold">Categories Management</h1>
+          <h1 className="text-3xl font-bold">Brands Management</h1>
         </div>
         <Button onClick={handleCreateClick}>
           <Plus className="h-4 w-4 mr-2" />
-          Add Category
+          Add Brand
         </Button>
       </div>
 
       {/* Search */}
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle>Search Categories</CardTitle>
+          <CardTitle>Search Brands</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="relative">
             <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
             <Input
-              placeholder="Search categories..."
+              placeholder="Search brands..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-9"
@@ -332,63 +346,63 @@ const navigate = useNavigate();
         </CardContent>
       </Card>
 
-      {/* Categories Table */}
+      {/* Brands Table */}
       <Card>
         <CardHeader>
-          <CardTitle>
-            Categories ({filteredCategories.length} items)
-          </CardTitle>
+          <CardTitle>Brands ({filteredBrands.length} items)</CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="h-8 w-8 animate-spin" />
             </div>
-          ) : filteredCategories.length > 0 ? (
+          ) : filteredBrands.length > 0 ? (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Category</TableHead>
+                  <TableHead>Name</TableHead>
                   <TableHead>Description</TableHead>
+                  <TableHead>Website</TableHead>
                   <TableHead>Sort Order</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredCategories.map((category) => (
-                  <TableRow key={category.id}>
+                {filteredBrands.map((brand) => (
+                  <TableRow key={brand.id}>
                     <TableCell>
-                      <div className="flex items-center gap-3">
-                        {category.image_url ? (
-                          <img
-                            src={category.image_url}
-                            alt={category.name}
-                            className="w-10 h-10 rounded object-cover"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).style.display = 'none';
-                            }}
-                          />
-                        ) : (
-                          <div className="w-10 h-10 bg-gray-200 rounded flex items-center justify-center">
-                            <ImageIcon className="h-5 w-5 text-gray-400" />
-                          </div>
-                        )}
-                        <div>
-                          <p className="font-medium">{category.name}</p>
-                          <p className="text-sm text-gray-500">ID: {category.id}</p>
-                        </div>
+                      <div>
+                        <p className="font-medium">{brand.name}</p>
+                        <p className="text-sm text-gray-500">ID: {brand.id}</p>
                       </div>
                     </TableCell>
                     <TableCell>
                       <p className="text-sm max-w-xs truncate">
-                        {category.description || 'No description'}
+                        {brand.description || "No description"}
                       </p>
                     </TableCell>
-                    <TableCell>{category.sort_order}</TableCell>
                     <TableCell>
-                      <Badge variant={category.is_active ? 'default' : 'secondary'}>
-                        {category.is_active ? 'Active' : 'Inactive'}
+                      {brand.website_url ? (
+                        <a
+                          href={brand.website_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 text-blue-600 hover:text-blue-800"
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                          Website
+                        </a>
+                      ) : (
+                        <span className="text-gray-500">-</span>
+                      )}
+                    </TableCell>
+                    <TableCell>{brand.sort_order}</TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={brand.is_active ? "default" : "secondary"}
+                      >
+                        {brand.is_active ? "Active" : "Inactive"}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
@@ -396,14 +410,14 @@ const navigate = useNavigate();
                         <Button
                           size="sm"
                           variant="ghost"
-                          onClick={() => handleEditClick(category)}
+                          onClick={() => handleEditClick(brand)}
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
                         <Button
                           size="sm"
                           variant="ghost"
-                          onClick={() => handleDeleteClick(category)}
+                          onClick={() => handleDeleteClick(brand)}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -415,35 +429,33 @@ const navigate = useNavigate();
             </Table>
           ) : (
             <div className="text-center py-8">
-              <p className="text-gray-500">No categories found</p>
+              <p className="text-gray-500">No brands found</p>
             </div>
           )}
         </CardContent>
       </Card>
 
-      {/* Create Category Dialog */}
+      {/* Create Brand Dialog */}
       <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Create New Category</DialogTitle>
+            <DialogTitle>Create New Brand</DialogTitle>
             <DialogDescription>
-              Add a new category to your catalog
+              Add a new brand to your catalog
             </DialogDescription>
           </DialogHeader>
-          <CategoryForm />
+          <BrandForm />
         </DialogContent>
       </Dialog>
 
-      {/* Edit Category Dialog */}
+      {/* Edit Brand Dialog */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Edit Category</DialogTitle>
-            <DialogDescription>
-              Update category information
-            </DialogDescription>
+            <DialogTitle>Edit Brand</DialogTitle>
+            <DialogDescription>Update brand information</DialogDescription>
           </DialogHeader>
-          <CategoryForm />
+          <BrandForm />
         </DialogContent>
       </Dialog>
 
@@ -453,8 +465,8 @@ const navigate = useNavigate();
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the category 
-              "{selectedCategory?.name}" and may affect associated products.
+              This action cannot be undone. This will permanently delete the
+              brand "{selectedBrand?.name}" and may affect associated products.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -470,7 +482,7 @@ const navigate = useNavigate();
                   Deleting...
                 </>
               ) : (
-                'Delete Category'
+                "Delete Brand"
               )}
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -480,4 +492,4 @@ const navigate = useNavigate();
   );
 };
 
-export default CategoriesPage;
+export default BrandsPage;

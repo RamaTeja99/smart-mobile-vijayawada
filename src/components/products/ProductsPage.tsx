@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -11,7 +11,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from "@/components/ui/table";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,26 +21,26 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+} from "@/components/ui/alert-dialog";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { 
-  Plus, 
-  Search, 
-  Edit, 
-  Trash2, 
-  Eye, 
-  Loader2, 
+} from "@/components/ui/select";
+import {
+  Plus,
+  Search,
+  Edit,
+  Trash2,
+  Eye,
+  Loader2,
   ChevronLeft,
-  ChevronRight
-} from 'lucide-react';
-import { toast } from 'sonner';
-import apiClient, { Product, Brand, Category } from '@/pages/api';
+  ChevronRight,
+} from "lucide-react";
+import { toast } from "sonner";
+import apiClient, { Product, Brand, Category } from "@/components/api/api";
 
 const ProductsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -51,12 +51,12 @@ const ProductsPage: React.FC = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
-  
+
   // Filters and pagination
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedBrand, setSelectedBrand] = useState<string>('all');
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [selectedStatus, setSelectedStatus] = useState<string>('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedBrand, setSelectedBrand] = useState<string>("all");
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [selectedStatus, setSelectedStatus] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const itemsPerPage = 20;
@@ -80,15 +80,16 @@ const ProductsPage: React.FC = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      
+
       // Fetch filters data
       const [brandsRes, categoriesRes] = await Promise.all([
         apiClient.getBrands(),
         apiClient.getCategories(),
       ]);
 
-      if (brandsRes.status === 'success') setBrands(brandsRes.data || []);
-      if (categoriesRes.status === 'success') setCategories(categoriesRes.data || []);
+      if (brandsRes.status === "success") setBrands(brandsRes.data || []);
+      if (categoriesRes.status === "success")
+        setCategories(categoriesRes.data || []);
 
       // Fetch products with filters
       const params: any = {
@@ -96,32 +97,31 @@ const ProductsPage: React.FC = () => {
         limit: itemsPerPage,
       };
 
-      if (selectedBrand !== 'all') params.brand_id = selectedBrand;
-      if (selectedCategory !== 'all') params.category_id = selectedCategory;
-      if (selectedStatus !== 'all') params.status = selectedStatus;
-
+      if (selectedBrand !== "all") params.brand_id = selectedBrand;
+      if (selectedCategory !== "all") params.category_id = selectedCategory;
+      if (selectedStatus !== "all") params.status = selectedStatus;
 
       let productsRes;
       if (searchTerm) {
         productsRes = await apiClient.searchProducts({
           query: searchTerm,
-          ...params
+          ...params,
         });
       } else {
         productsRes = await apiClient.getProducts(params);
       }
 
-      if (productsRes.status === 'success') {
+      if (productsRes.status === "success") {
         setProducts(productsRes.data || []);
         if (productsRes.pagination) {
           setTotalPages(productsRes.pagination.totalPages || 1);
         }
       } else {
-        toast.error('Failed to fetch products');
+        toast.error("Failed to fetch products");
       }
     } catch (error) {
-      console.error('Error fetching data:', error);
-      toast.error('Failed to load products');
+      console.error("Error fetching data:", error);
+      toast.error("Failed to load products");
     } finally {
       setLoading(false);
     }
@@ -134,19 +134,19 @@ const ProductsPage: React.FC = () => {
 
   const handleDeleteConfirm = async () => {
     if (!productToDelete) return;
-    
+
     try {
       setDeleteLoading(true);
       const response = await apiClient.deleteProduct(productToDelete.id);
-      
-      if (response.status === 'success') {
-        toast.success('Product deleted successfully');
-        setProducts(products.filter(p => p.id !== productToDelete.id));
+
+      if (response.status === "success") {
+        toast.success("Product deleted successfully");
+        setProducts(products.filter((p) => p.id !== productToDelete.id));
       } else {
-        toast.error(response.message || 'Failed to delete product');
+        toast.error(response.message || "Failed to delete product");
       }
     } catch (error) {
-      toast.error('Failed to delete product');
+      toast.error("Failed to delete product");
     } finally {
       setDeleteLoading(false);
       setDeleteDialogOpen(false);
@@ -155,35 +155,42 @@ const ProductsPage: React.FC = () => {
   };
 
   const clearFilters = () => {
-    setSearchTerm('');
-    setSelectedBrand('');
-    setSelectedCategory('');
-    setSelectedStatus('');
+    setSearchTerm("");
+    setSelectedBrand("");
+    setSelectedCategory("");
+    setSelectedStatus("");
     setCurrentPage(1);
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active': return 'default';
-      case 'inactive': return 'secondary';
-      case 'out_of_stock': return 'destructive';
-      default: return 'default';
+      case "active":
+        return "default";
+      case "inactive":
+        return "secondary";
+      case "out_of_stock":
+        return "destructive";
+      default:
+        return "default";
     }
   };
 
   const handleBack = () => {
-    navigate('/admin/dashboard');
+    navigate("/admin/dashboard");
   };
-
 
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Header */}
       <div className="flex justify-between items-center mb-8">
-         <Button variant="outline" onClick={handleBack} className="flex items-center gap-2">
-      <ChevronLeft className="w-4 h-4" />
-      Back to Dashboard
-    </Button>
+        <Button
+          variant="outline"
+          onClick={handleBack}
+          className="flex items-center gap-2"
+        >
+          <ChevronLeft className="w-4 h-4" />
+          Back to Dashboard
+        </Button>
         <div>
           <h1 className="text-3xl font-bold">Products Management</h1>
         </div>
@@ -229,7 +236,10 @@ const ProductsPage: React.FC = () => {
             </Select>
 
             {/* Category Filter */}
-            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+            <Select
+              value={selectedCategory}
+              onValueChange={setSelectedCategory}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="All Categories" />
               </SelectTrigger>
@@ -267,9 +277,7 @@ const ProductsPage: React.FC = () => {
       {/* Products Table */}
       <Card>
         <CardHeader>
-          <CardTitle>
-            Products ({products.length} items)
-          </CardTitle>
+          <CardTitle>Products ({products.length} items)</CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -296,33 +304,54 @@ const ProductsPage: React.FC = () => {
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <img
-                            src={product.featured_image || product.images?.[0] || '/placeholder.svg'}
+                            src={
+                              product.featured_image ||
+                              product.images?.[0] ||
+                              "/placeholder.svg"
+                            }
                             alt={product.name}
                             className="w-10 h-10 rounded object-cover"
                             onError={(e) => {
-                              (e.target as HTMLImageElement).src = '/placeholder.svg';
+                              (e.target as HTMLImageElement).src =
+                                "/placeholder.svg";
                             }}
                           />
                           <div>
-                            <p className="font-medium line-clamp-1">{product.name}</p>
-                            <p className="text-sm text-gray-500">SKU: {product.sku || 'N/A'}</p>
+                            <p className="font-medium line-clamp-1">
+                              {product.name}
+                            </p>
+                            <p className="text-sm text-gray-500">
+                              SKU: {product.sku || "N/A"}
+                            </p>
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell>{product.brand?.name || 'N/A'}</TableCell>
-                      <TableCell>{product.category?.name || 'N/A'}</TableCell>
+                      <TableCell>{product.brand?.name || "N/A"}</TableCell>
+                      <TableCell>{product.category?.name || "N/A"}</TableCell>
                       <TableCell>
                         <div>
-                          <p className="font-medium"> ₹ {product.price_display.slice(1) || `$${product.price}`}</p>
-                          {product.original_price && product.original_price > product.price && (
-                            <p className="text-sm text-gray-500 line-through">
-                              ₹ {product.original_price}
-                            </p>
-                          )}
+                          <p className="font-medium">
+                            {" "}
+                            ₹{" "}
+                            {product.price_display.slice(1) ||
+                              `$${product.price}`}
+                          </p>
+                          {product.original_price &&
+                            product.original_price > product.price && (
+                              <p className="text-sm text-gray-500 line-through">
+                                ₹ {product.original_price}
+                              </p>
+                            )}
                         </div>
                       </TableCell>
                       <TableCell>
-                        <span className={`font-medium ${product.stock_quantity > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        <span
+                          className={`font-medium ${
+                            product.stock_quantity > 0
+                              ? "text-green-600"
+                              : "text-red-600"
+                          }`}
+                        >
                           {product.stock_quantity}
                         </span>
                       </TableCell>
@@ -343,7 +372,9 @@ const ProductsPage: React.FC = () => {
                           <Button
                             size="sm"
                             variant="ghost"
-                            onClick={() => navigate(`/admin/products/${product.id}/edit`)}
+                            onClick={() =>
+                              navigate(`/admin/products/${product.id}/edit`)
+                            }
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
@@ -371,7 +402,9 @@ const ProductsPage: React.FC = () => {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                      onClick={() =>
+                        setCurrentPage(Math.max(1, currentPage - 1))
+                      }
                       disabled={currentPage === 1}
                     >
                       <ChevronLeft className="h-4 w-4" />
@@ -379,7 +412,9 @@ const ProductsPage: React.FC = () => {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                      onClick={() =>
+                        setCurrentPage(Math.min(totalPages, currentPage + 1))
+                      }
                       disabled={currentPage === totalPages}
                     >
                       <ChevronRight className="h-4 w-4" />
@@ -402,12 +437,14 @@ const ProductsPage: React.FC = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the product 
-              "{productToDelete?.name}" from your catalog.
+              This action cannot be undone. This will permanently delete the
+              product "{productToDelete?.name}" from your catalog.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleteLoading}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={deleteLoading}>
+              Cancel
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteConfirm}
               disabled={deleteLoading}
@@ -419,7 +456,7 @@ const ProductsPage: React.FC = () => {
                   Deleting...
                 </>
               ) : (
-                'Delete Product'
+                "Delete Product"
               )}
             </AlertDialogAction>
           </AlertDialogFooter>
