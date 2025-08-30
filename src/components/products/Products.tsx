@@ -12,8 +12,12 @@ import {
 } from "@/components/ui/select";
 import { Link } from "react-router-dom";
 import { Search, Star, Filter, Loader2 } from "lucide-react";
-import { useAllProducts, useProductSearch, useSearchFilters } from "./hooks";
-import { Product, SearchParams } from "./api";
+import {
+  useAllProducts,
+  useProductSearch,
+  useSearchFilters,
+} from "../../hooks/hooks";
+import { Product, SearchParams } from "../api/api";
 const ALL_PRICE_MAX = 99999999;
 const Products = () => {
   const [searchQuery, setSearchQuery] = useState("");

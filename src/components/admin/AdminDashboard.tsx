@@ -20,9 +20,9 @@ import {
   Settings,
   BarChart3,
 } from "lucide-react";
-import { useAuth } from "./AuthContext";
-import { useProducts } from "./hooks";
-import apiClient, { Product } from "./api";
+import { useAuth } from "../../lib/AuthContext";
+import { useProducts } from "../../hooks/hooks";
+import apiClient, { Product } from "../api/api";
 import { Link } from "react-router-dom";
 
 interface DashboardStats {

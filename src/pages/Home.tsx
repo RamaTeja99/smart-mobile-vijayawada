@@ -11,8 +11,8 @@ import {
   Headphones,
 } from "lucide-react";
 import heroImage from "@/assets/hero-mobile-store.jpg";
-import { useFeaturedProducts } from "./hooks";
-import { Product } from "./api";
+import { useFeaturedProducts } from "../hooks/hooks";
+import { Product } from "../components/api/api";
 
 const Home = () => {
   const { products: featuredProducts, loading: featuredLoading } =

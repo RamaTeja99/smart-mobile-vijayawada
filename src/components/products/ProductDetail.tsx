@@ -4,9 +4,18 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Star, ArrowLeft, Heart, Share2, Shield, Truck, RotateCcw, Loader2 } from "lucide-react";
-import { useProduct, useProducts } from "./hooks";
-import { Product } from "./api";
+import {
+  Star,
+  ArrowLeft,
+  Heart,
+  Share2,
+  Shield,
+  Truck,
+  RotateCcw,
+  Loader2,
+} from "lucide-react";
+import { useProduct, useProducts } from "../../hooks/hooks";
+import { Product } from "../api/api";
 
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -21,7 +30,9 @@ const ProductDetail = () => {
   });
 
   // Filter out current product from related products
-  const filteredRelatedProducts = relatedProducts.filter(p => p.id !== product?.id).slice(0, 3);
+  const filteredRelatedProducts = relatedProducts
+    .filter((p) => p.id !== product?.id)
+    .slice(0, 3);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -42,8 +53,12 @@ const ProductDetail = () => {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Product Not Found</h1>
-          <p className="text-gray-600 mb-6">{error || "The product you're looking for doesn't exist."}</p>
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">
+            Product Not Found
+          </h1>
+          <p className="text-gray-600 mb-6">
+            {error || "The product you're looking for doesn't exist."}
+          </p>
           <Link to="/products">
             <Button>
               <ArrowLeft className="mr-2 h-4 w-4" />
@@ -74,9 +89,9 @@ const ProductDetail = () => {
               key={index}
               onClick={() => setSelectedImage(index)}
               className={`aspect-square rounded-lg overflow-hidden border-2 transition-colors $${
-                selectedImage === index 
-                  ? 'border-blue-500' 
-                  : 'border-gray-200 hover:border-gray-300'
+                selectedImage === index
+                  ? "border-blue-500"
+                  : "border-gray-200 hover:border-gray-300"
               }`}
             >
               <img
@@ -104,7 +119,7 @@ const ProductDetail = () => {
             url: window.location.href,
           });
         } catch (error) {
-          console.error('Error sharing:', error);
+          console.error("Error sharing:", error);
         }
       } else {
         // Fallback: copy to clipboard
@@ -132,7 +147,7 @@ const ProductDetail = () => {
           <span>/</span>
           {product.category && (
             <>
-              <Link 
+              <Link
                 to={`/products?category=${product.category.slug}`}
                 className="hover:text-blue-600"
               >
@@ -171,9 +186,7 @@ const ProductDetail = () => {
               {product.is_featured && (
                 <Badge className="bg-blue-500">Featured</Badge>
               )}
-              {product.is_new && (
-                <Badge className="bg-green-500">New</Badge>
-              )}
+              {product.is_new && <Badge className="bg-green-500">New</Badge>}
               {product.discount_percentage > 0 && (
                 <Badge className="bg-red-500">
                   -{product.discount_percentage}% OFF
@@ -184,7 +197,7 @@ const ProductDetail = () => {
             {/* Brand */}
             {product.brand && (
               <div className="text-sm text-gray-600">
-                <Link 
+                <Link
                   to={`/products?brand=${product.brand.slug}`}
                   className="hover:text-blue-600 font-medium"
                 >
@@ -194,9 +207,7 @@ const ProductDetail = () => {
             )}
 
             {/* Title */}
-            <h1 className="text-3xl font-bold text-gray-900">
-              {product.name}
-            </h1>
+            <h1 className="text-3xl font-bold text-gray-900">{product.name}</h1>
 
             {/* Rating */}
             <div className="flex items-center gap-4">
@@ -206,14 +217,15 @@ const ProductDetail = () => {
                     key={i}
                     className={`h-5 w-5 ${
                       i < Math.floor(product.average_rating)
-                        ? 'fill-yellow-400 text-yellow-400'
-                        : 'text-gray-300'
+                        ? "fill-yellow-400 text-yellow-400"
+                        : "text-gray-300"
                     }`}
                   />
                 ))}
               </div>
               <span className="text-sm text-gray-600">
-                {product.average_rating.toFixed(1)} ({product.total_reviews} reviews)
+                {product.average_rating.toFixed(1)} ({product.total_reviews}{" "}
+                reviews)
               </span>
             </div>
 
@@ -223,11 +235,12 @@ const ProductDetail = () => {
                 <span className="text-3xl font-bold text-green-600">
                   ₹ {product.price_display.slice(1)}
                 </span>
-                {product.original_price && product.original_price > product.price && (
-                  <span className="text-xl text-gray-500 line-through">
-                    ₹ {product.original_price.toFixed(2)}
-                  </span>
-                )}
+                {product.original_price &&
+                  product.original_price > product.price && (
+                    <span className="text-xl text-gray-500 line-through">
+                      ₹ {product.original_price.toFixed(2)}
+                    </span>
+                  )}
               </div>
               {product.discount_amount > 0 && (
                 <p className="text-sm text-green-600 font-medium">
@@ -238,12 +251,16 @@ const ProductDetail = () => {
 
             {/* Stock Status */}
             <div className="flex items-center gap-2">
-              <div className={`w-3 h-3 rounded-full ${
-                product.in_stock ? 'bg-green-500' : 'bg-red-500'
-              }`} />
-              <span className={`font-medium ${
-                product.in_stock ? 'text-green-600' : 'text-red-600'
-              }`}>
+              <div
+                className={`w-3 h-3 rounded-full ${
+                  product.in_stock ? "bg-green-500" : "bg-red-500"
+                }`}
+              />
+              <span
+                className={`font-medium ${
+                  product.in_stock ? "text-green-600" : "text-red-600"
+                }`}
+              >
                 {product.stock_status}
               </span>
               {product.in_stock && product.stock_quantity <= 10 && (
@@ -262,12 +279,8 @@ const ProductDetail = () => {
 
             {/* Action Buttons */}
             <div className="flex gap-4 pt-4">
-              <Button 
-                size="lg" 
-                className="flex-1"
-                disabled={!product.in_stock}
-              >
-                {product.in_stock ? 'Contact for Purchase' : 'Out of Stock'}
+              <Button size="lg" className="flex-1" disabled={!product.in_stock}>
+                {product.in_stock ? "Contact for Purchase" : "Out of Stock"}
               </Button>
               <Button variant="outline" size="lg">
                 <Heart className="h-4 w-4" />
@@ -305,7 +318,11 @@ const ProductDetail = () => {
               <TabsContent value="description" className="mt-6">
                 <div className="prose prose-gray max-w-none">
                   {product.description ? (
-                    <div dangerouslySetInnerHTML={{ __html: product.description.replace(/\n/g, '<br/>') }} />
+                    <div
+                      dangerouslySetInnerHTML={{
+                        __html: product.description.replace(/\n/g, "<br/>"),
+                      }}
+                    />
                   ) : (
                     <p>No detailed description available.</p>
                   )}
@@ -313,14 +330,22 @@ const ProductDetail = () => {
               </TabsContent>
 
               <TabsContent value="specifications" className="mt-6">
-                {product.specifications && Object.keys(product.specifications).length > 0 ? (
+                {product.specifications &&
+                Object.keys(product.specifications).length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {Object.entries(product.specifications).map(([key, value]) => (
-                      <div key={key} className="flex justify-between border-b pb-2">
-                        <span className="font-medium text-gray-700">{key}:</span>
-                        <span className="text-gray-900">{String(value)}</span>
-                      </div>
-                    ))}
+                    {Object.entries(product.specifications).map(
+                      ([key, value]) => (
+                        <div
+                          key={key}
+                          className="flex justify-between border-b pb-2"
+                        >
+                          <span className="font-medium text-gray-700">
+                            {key}:
+                          </span>
+                          <span className="text-gray-900">{String(value)}</span>
+                        </div>
+                      )
+                    )}
                   </div>
                 ) : (
                   <p className="text-gray-500">No specifications available.</p>
@@ -333,19 +358,29 @@ const ProductDetail = () => {
         {/* Related Products */}
         {filteredRelatedProducts.length > 0 && (
           <div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Related Products</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">
+              Related Products
+            </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredRelatedProducts.map((relatedProduct) => (
-                <Link key={relatedProduct.id} to={`/products/${relatedProduct.id}`}>
+                <Link
+                  key={relatedProduct.id}
+                  to={`/products/${relatedProduct.id}`}
+                >
                   <Card className="group hover:shadow-lg transition-shadow">
                     <CardContent className="p-4">
                       <div className="aspect-square rounded-lg overflow-hidden mb-4 bg-gray-100">
                         <img
-                          src={relatedProduct.featured_image || relatedProduct.images[0] || "/placeholder.svg"}
+                          src={
+                            relatedProduct.featured_image ||
+                            relatedProduct.images[0] ||
+                            "/placeholder.svg"
+                          }
                           alt={relatedProduct.name}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                           onError={(e) => {
-                            (e.target as HTMLImageElement).src = "/placeholder.svg";
+                            (e.target as HTMLImageElement).src =
+                              "/placeholder.svg";
                           }}
                         />
                       </div>
@@ -362,8 +397,14 @@ const ProductDetail = () => {
                         <span className="font-bold text-green-600">
                           {relatedProduct.price_display}
                         </span>
-                        <Badge variant={relatedProduct.in_stock ? "default" : "destructive"}>
-                          {relatedProduct.in_stock ? 'In Stock' : 'Out of Stock'}
+                        <Badge
+                          variant={
+                            relatedProduct.in_stock ? "default" : "destructive"
+                          }
+                        >
+                          {relatedProduct.in_stock
+                            ? "In Stock"
+                            : "Out of Stock"}
                         </Badge>
                       </div>
                     </CardContent>

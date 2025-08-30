@@ -1,19 +1,27 @@
-import { useState, useEffect } from 'react';
-import apiClient, { Product, Category, Brand, SearchFilters, SearchParams } from './api';
-import { useToast } from '../hooks/use-toast';
+import { useState, useEffect } from "react";
+import apiClient, {
+  Product,
+  Category,
+  Brand,
+  SearchFilters,
+  SearchParams,
+} from "../components/api/api";
+import { useToast } from "../hooks/use-toast";
 
 // Products hook
-export const useProducts = (params: {
-  page?: number;
-  limit?: number;
-  sort_by?: string;
-  sort_order?: string;
-  brand_id?: string;
-  category_id?: string;
-  is_featured?: boolean;
-  is_bestseller?: boolean;
-  in_stock?: boolean;
-} = {}) => {
+export const useProducts = (
+  params: {
+    page?: number;
+    limit?: number;
+    sort_by?: string;
+    sort_order?: string;
+    brand_id?: string;
+    category_id?: string;
+    is_featured?: boolean;
+    is_bestseller?: boolean;
+    in_stock?: boolean;
+  } = {}
+) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -31,17 +39,17 @@ export const useProducts = (params: {
         setError(null);
         const response = await apiClient.getProducts(params);
 
-        if (response.status === 'success' && response.data) {
+        if (response.status === "success" && response.data) {
           setProducts(response.data);
           if (response.pagination) {
             setPagination(response.pagination);
           }
         } else {
-          setError(response.message || 'Failed to load products');
+          setError(response.message || "Failed to load products");
         }
       } catch (err) {
-        setError('Failed to load products');
-        console.error('Products fetch error:', err);
+        setError("Failed to load products");
+        console.error("Products fetch error:", err);
       } finally {
         setLoading(false);
       }
@@ -65,14 +73,14 @@ export const useAllProducts = (limit = 1000) => {
         setError(null);
         const response = await apiClient.getAllProducts(limit);
 
-        if (response.status === 'success' && response.data) {
+        if (response.status === "success" && response.data) {
           setProducts(response.data);
         } else {
-          setError(response.message || 'Failed to load products');
+          setError(response.message || "Failed to load products");
         }
       } catch (err) {
-        setError('Failed to load products');
-        console.error('All products fetch error:', err);
+        setError("Failed to load products");
+        console.error("All products fetch error:", err);
       } finally {
         setLoading(false);
       }
@@ -83,7 +91,6 @@ export const useAllProducts = (limit = 1000) => {
 
   return { products, loading, error };
 };
-
 
 // Product search hook
 export const useProductSearch = (searchParams: SearchParams) => {
@@ -105,15 +112,15 @@ export const useProductSearch = (searchParams: SearchParams) => {
         setError(null);
         const response = await apiClient.searchProducts(searchParams);
 
-        if (response.status === 'success' && response.data) {
+        if (response.status === "success" && response.data) {
           setResults(response.data);
           setMetadata(response.metadata);
         } else {
-          setError(response.message || 'Search failed');
+          setError(response.message || "Search failed");
         }
       } catch (err) {
-        setError('Search failed');
-        console.error('Search error:', err);
+        setError("Search failed");
+        console.error("Search error:", err);
       } finally {
         setLoading(false);
       }
@@ -141,14 +148,14 @@ export const useProduct = (id: string) => {
         setError(null);
         const response = await apiClient.getProductById(id);
 
-        if (response.status === 'success' && response.data) {
+        if (response.status === "success" && response.data) {
           setProduct(response.data);
         } else {
-          setError(response.message || 'Product not found');
+          setError(response.message || "Product not found");
         }
       } catch (err) {
-        setError('Failed to load product');
-        console.error('Product fetch error:', err);
+        setError("Failed to load product");
+        console.error("Product fetch error:", err);
       } finally {
         setLoading(false);
       }
@@ -173,14 +180,14 @@ export const useCategories = () => {
         setError(null);
         const response = await apiClient.getCategories();
 
-        if (response.status === 'success' && response.data) {
+        if (response.status === "success" && response.data) {
           setCategories(response.data);
         } else {
-          setError(response.message || 'Failed to load categories');
+          setError(response.message || "Failed to load categories");
         }
       } catch (err) {
-        setError('Failed to load categories');
-        console.error('Categories fetch error:', err);
+        setError("Failed to load categories");
+        console.error("Categories fetch error:", err);
       } finally {
         setLoading(false);
       }
@@ -205,14 +212,14 @@ export const useBrands = () => {
         setError(null);
         const response = await apiClient.getBrands();
 
-        if (response.status === 'success' && response.data) {
+        if (response.status === "success" && response.data) {
           setBrands(response.data);
         } else {
-          setError(response.message || 'Failed to load brands');
+          setError(response.message || "Failed to load brands");
         }
       } catch (err) {
-        setError('Failed to load brands');
-        console.error('Brands fetch error:', err);
+        setError("Failed to load brands");
+        console.error("Brands fetch error:", err);
       } finally {
         setLoading(false);
       }
@@ -237,14 +244,14 @@ export const useFeaturedProducts = (limit = 10) => {
         setError(null);
         const response = await apiClient.getFeaturedProducts(limit);
 
-        if (response.status === 'success' && response.data) {
+        if (response.status === "success" && response.data) {
           setProducts(response.data);
         } else {
-          setError(response.message || 'Failed to load featured products');
+          setError(response.message || "Failed to load featured products");
         }
       } catch (err) {
-        setError('Failed to load featured products');
-        console.error('Featured products fetch error:', err);
+        setError("Failed to load featured products");
+        console.error("Featured products fetch error:", err);
       } finally {
         setLoading(false);
       }
@@ -269,14 +276,14 @@ export const useSearchFilters = () => {
         setError(null);
         const response = await apiClient.getSearchFilters();
 
-        if (response.status === 'success' && response.data) {
+        if (response.status === "success" && response.data) {
           setFilters(response.data);
         } else {
-          setError(response.message || 'Failed to load filters');
+          setError(response.message || "Failed to load filters");
         }
       } catch (err) {
-        setError('Failed to load filters');
-        console.error('Filters fetch error:', err);
+        setError("Failed to load filters");
+        console.error("Filters fetch error:", err);
       } finally {
         setLoading(false);
       }

@@ -15,7 +15,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { ArrowLeft, Loader2 } from "lucide-react";
-import apiClient, { Product, Brand, Category } from "@/pages/api";
+import apiClient, { Product, Brand, Category } from "@/components/api/api";
 
 const EditProduct: React.FC = () => {
   const navigate = useNavigate();
@@ -23,7 +23,7 @@ const EditProduct: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [product, setProduct] = useState<Product | null>(null);
-  
+
   // Form dependencies
   const [brands, setBrands] = useState<Brand[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -63,10 +63,10 @@ const EditProduct: React.FC = () => {
     is_new: false,
     images: [],
     specifications: [
-    { key: "", value: "" },
-    { key: "", value: "" },
-    { key: "", value: "" },
-  ],
+      { key: "", value: "" },
+      { key: "", value: "" },
+      { key: "", value: "" },
+    ],
   });
 
   useEffect(() => {
@@ -78,21 +78,21 @@ const EditProduct: React.FC = () => {
   const fetchProductAndFilters = async () => {
     try {
       setLoading(true);
-      
+
       const [productRes, brandsRes, categoriesRes] = await Promise.all([
         apiClient.getProductById(id!),
         apiClient.getBrands(),
         apiClient.getCategories(),
       ]);
 
-      if (productRes.status === 'success' && productRes.data) {
+      if (productRes.status === "success" && productRes.data) {
         const productData = productRes.data;
-        let specsArray: {key: string; value: string}[] = [
-         { key: "", value: "" },
-         { key: "", value: "" },
-         { key: "", value: "" }
+        let specsArray: { key: string; value: string }[] = [
+          { key: "", value: "" },
+          { key: "", value: "" },
+          { key: "", value: "" },
         ];
-         if (productData.specifications) {
+        if (productData.specifications) {
           let specsObj: Record<string, any> = {};
           if (typeof productData.specifications === "string") {
             specsObj = JSON.parse(productData.specifications);
@@ -154,23 +154,27 @@ const EditProduct: React.FC = () => {
       [name]: value,
     }));
   };
-   const handleSpecChange = (index: number, field: "key" | "value", value: string) => {
-  const specs = [...formData.specifications];
-  specs[index][field] = value;
-  setFormData({ ...formData, specifications: specs });
-};
+  const handleSpecChange = (
+    index: number,
+    field: "key" | "value",
+    value: string
+  ) => {
+    const specs = [...formData.specifications];
+    specs[index][field] = value;
+    setFormData({ ...formData, specifications: specs });
+  };
 
-const addSpecification = () => {
-  setFormData({
-    ...formData,
-    specifications: [...formData.specifications, { key: "", value: "" }],
-  });
-};
+  const addSpecification = () => {
+    setFormData({
+      ...formData,
+      specifications: [...formData.specifications, { key: "", value: "" }],
+    });
+  };
 
-const removeSpecification = (index: number) => {
-  const specs = formData.specifications.filter((_, i) => i !== index);
-  setFormData({ ...formData, specifications: specs });
-};
+  const removeSpecification = (index: number) => {
+    const specs = formData.specifications.filter((_, i) => i !== index);
+    setFormData({ ...formData, specifications: specs });
+  };
 
   // Add image link
   const addImage = () => {
@@ -194,13 +198,13 @@ const removeSpecification = (index: number) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!id) return;
-    
+
     setSubmitting(true);
 
     try {
       let specsObj: Record<string, string> = {};
 
-     formData.specifications.forEach(({ key, value }) => {
+      formData.specifications.forEach(({ key, value }) => {
         if (key.trim()) {
           specsObj[key.trim()] = value.trim();
         }
@@ -221,7 +225,8 @@ const removeSpecification = (index: number) => {
         model: formData.model,
         sku: formData.sku || undefined,
         brand_id: formData.brand_id !== "none" ? formData.brand_id : undefined,
-        category_id: formData.category_id !== "none" ? formData.category_id : undefined,
+        category_id:
+          formData.category_id !== "none" ? formData.category_id : undefined,
         status: formData.status,
         is_featured: formData.is_featured,
         is_bestseller: formData.is_bestseller,
@@ -285,10 +290,7 @@ const removeSpecification = (index: number) => {
     <div className="container mx-auto px-4 py-8">
       {/* Header */}
       <div className="flex items-center gap-20 mb-8">
-        <Button
-          variant="ghost"
-          onClick={() => navigate("/admin/products")}
-        >
+        <Button variant="ghost" onClick={() => navigate("/admin/products")}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Products
         </Button>
@@ -368,7 +370,9 @@ const removeSpecification = (index: number) => {
                   step="0.01"
                   min="0"
                   value={formData.original_price}
-                  onChange={(e) => handleChange("original_price", e.target.value)}
+                  onChange={(e) =>
+                    handleChange("original_price", e.target.value)
+                  }
                 />
               </div>
 
@@ -380,7 +384,9 @@ const removeSpecification = (index: number) => {
                   type="number"
                   min="0"
                   value={formData.stock_quantity}
-                  onChange={(e) => handleChange("stock_quantity", e.target.value)}
+                  onChange={(e) =>
+                    handleChange("stock_quantity", e.target.value)
+                  }
                 />
               </div>
             </CardContent>
@@ -398,7 +404,10 @@ const removeSpecification = (index: number) => {
                 <Select
                   value={formData.status}
                   onValueChange={(v) =>
-                    handleChange("status", v as "active" | "inactive" | "out_of_stock")
+                    handleChange(
+                      "status",
+                      v as "active" | "inactive" | "out_of_stock"
+                    )
                   }
                 >
                   <SelectTrigger>
@@ -543,42 +552,45 @@ const removeSpecification = (index: number) => {
         </Card>
 
         {/* Specifications */}
-       <Card>
-  <CardHeader>
-    <CardTitle>Specifications</CardTitle>
-  </CardHeader>
-  <CardContent>
-    {formData.specifications.map((spec, index) => (
-      <div key={index} className="flex gap-2 mb-2">
-        <Input
-          placeholder="Key"
-          value={spec.key}
-          onChange={(e) => handleSpecChange(index, "key", e.target.value)}
-          className="flex-1"
-        />
-        <Input
-          placeholder="Value"
-          value={spec.value}
-          onChange={(e) => handleSpecChange(index, "value", e.target.value)}
-          className="flex-1"
-        />
-        {formData.specifications.length > 3 && (
-          <Button
-            variant="destructive"
-            type="button"
-            onClick={() => removeSpecification(index)}
-          >
-            Remove
-          </Button>
-        )}
-      </div>
-    ))}
-    <Button type="button" variant="outline" onClick={addSpecification}>
-      Add Specification
-    </Button>
-  </CardContent>
-</Card>
-
+        <Card>
+          <CardHeader>
+            <CardTitle>Specifications</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {formData.specifications.map((spec, index) => (
+              <div key={index} className="flex gap-2 mb-2">
+                <Input
+                  placeholder="Key"
+                  value={spec.key}
+                  onChange={(e) =>
+                    handleSpecChange(index, "key", e.target.value)
+                  }
+                  className="flex-1"
+                />
+                <Input
+                  placeholder="Value"
+                  value={spec.value}
+                  onChange={(e) =>
+                    handleSpecChange(index, "value", e.target.value)
+                  }
+                  className="flex-1"
+                />
+                {formData.specifications.length > 3 && (
+                  <Button
+                    variant="destructive"
+                    type="button"
+                    onClick={() => removeSpecification(index)}
+                  >
+                    Remove
+                  </Button>
+                )}
+              </div>
+            ))}
+            <Button type="button" variant="outline" onClick={addSpecification}>
+              Add Specification
+            </Button>
+          </CardContent>
+        </Card>
 
         {/* Actions */}
         <div className="flex justify-end space-x-4">

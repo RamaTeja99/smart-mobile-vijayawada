@@ -16,7 +16,7 @@ import {
   Star,
   ExternalLink,
 } from "lucide-react";
-import apiClient from "./api";
+import apiClient from "../components/api/api";
 
 const Contact = () => {
   const widgetContainerRef = useRef<HTMLDivElement>(null);
